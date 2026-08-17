@@ -74,6 +74,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
   // Store settings local form state
   const [storeForm, setStoreForm] = useState(storeSettings);
 
+  React.useEffect(() => {
+    setStoreForm(storeSettings);
+  }, [storeSettings]);
+
   // Category modal/form state
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState('');

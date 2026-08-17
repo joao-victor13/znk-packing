@@ -5,7 +5,7 @@ import { formatCurrency, formatDate, formatCNPJ, formatPhone, getDeliveryDeadlin
 
 export function exportOrderToPdf(order: PurchaseOrder, customStore?: StoreSettings) {
   const store = customStore || {
-    storeName: 'ZNK ATELIER',
+    storeName: 'ZNK PACKING',
     tagline: 'MODA FEMININA & CONFECÇÃO PREMIUM',
     legalName: 'ZNK Comércio de Roupas Femininas Ltda',
     cnpj: '42.190.876/0001-33',
@@ -39,7 +39,7 @@ export function exportOrderToPdf(order: PurchaseOrder, customStore?: StoreSettin
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.text((store.storeName || 'ZNK ATELIER').toUpperCase(), 14, 16);
+  doc.text((store.storeName || 'ZNK PACKING').toUpperCase(), 14, 16);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
@@ -249,7 +249,7 @@ export function exportOrderToPdf(order: PurchaseOrder, customStore?: StoreSettin
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-  doc.text(`${(store.storeName || 'ZNK ATELIER').toUpperCase()} - Compras / Produção`, 52.5, y + 14, { align: 'center' });
+  doc.text(`${(store.storeName || 'ZNK PACKING').toUpperCase()} - Compras / Produção`, 52.5, y + 14, { align: 'center' });
   doc.text('Aceite e De Acordo do Fornecedor', 157.5, y + 14, { align: 'center' });
 
   // Save the PDF

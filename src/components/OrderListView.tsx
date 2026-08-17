@@ -79,7 +79,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
   const handleShareWhatsApp = (order: PurchaseOrder) => {
     const phone = order.supplierPhone ? order.supplierPhone.replace(/\D/g, '') : '';
-    let text = `*ZNK ATELIER - ACOMPANHAMENTO DO PEDIDO Nº ${order.orderNumber}*\n`;
+    let text = `*ZNK PACKING - ACOMPANHAMENTO DO PEDIDO Nº ${order.orderNumber}*\n`;
     text += `Olá ${order.supplierContact || 'Equipe'},\n`;
     text += `Gostaríamos de confirmar o status da nossa produção:\n`;
     text += `📅 *Previsão de Entrega:* ${formatDate(order.expectedDeliveryDate)}\n`;

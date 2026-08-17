@@ -87,7 +87,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
           <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-brand-600 pb-4 gap-4">
             <div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-brand-900 uppercase">
-                {storeSettings.storeName || 'ZNK ATELIER'}
+                {storeSettings.storeName || 'ZNK PACKING'}
               </h1>
               <p className="text-xs uppercase font-semibold tracking-wider text-brand-700">
                 {storeSettings.tagline || 'Moda Feminina & Confecção Premium'}
@@ -240,7 +240,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
           <div className="grid grid-cols-2 gap-12 pt-8 text-center text-xs text-editorial-muted border-t border-stone-200">
             <div>
               <div className="border-b border-stone-400 w-3/4 mx-auto mb-2"></div>
-              <span>{(storeSettings.storeName || 'ZNK ATELIER').toUpperCase()} - Gestão de Compras</span>
+              <span>{(storeSettings.storeName || 'ZNK PACKING').toUpperCase()} - Gestão de Compras</span>
             </div>
             <div>
               <div className="border-b border-stone-400 w-3/4 mx-auto mb-2"></div>

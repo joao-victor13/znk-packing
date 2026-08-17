@@ -5,7 +5,7 @@ import { formatDate } from './calculations';
 export function exportOrderToExcel(order: PurchaseOrder) {
   // Order Header Information
   const headerData = [
-    ['ZNK ATELIER - ORDEM DE COMPRA DE CONFECÇÃO'],
+    ['ZNK PACKING - ORDEM DE COMPRA DE CONFECÇÃO'],
     ['Número do Pedido:', order.orderNumber, 'Status:', order.status.toUpperCase()],
     ['Fornecedor:', order.supplierTradeName || order.supplierName, 'CNPJ:', order.supplierCnpj],
     ['Contato:', order.supplierContact, 'Telefone:', order.supplierPhone],

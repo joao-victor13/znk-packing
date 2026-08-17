@@ -2,10 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary-rgb: 176, 125, 79;
+  --color-primary-hover-rgb: 142, 95, 54;
+  --color-primary-light-rgb: 250, 246, 240;
+  --color-primary-subtle-rgb: 244, 235, 225;
+  --color-primary-border-rgb: 232, 215, 195;
+  --color-primary-text-rgb: 78, 48, 24;
+
+  --color-primary: #B07D4F;
+  --color-primary-hover: #8E5F36;
+  --color-primary-light: #FAF6F0;
+  --color-primary-subtle: #F4EBE1;
+  --color-primary-border: #E8D7C3;
+  --color-primary-text: #4E3018;
+
+  --color-bg-light: #FAF8F5;
+  --color-card-bg: #FFFFFF;
+  --color-border: #E8D7C3;
+  --color-text: #221C18;
+  --color-text-muted: #736B63;
+  --font-family-body: 'Plus Jakarta Sans';
+  --font-family-heading: 'Playfair Display';
+}
+
 @layer base {
   body {
-    @apply bg-[#FAF8F5] text-[#221C18] antialiased;
+    background-color: var(--color-bg-light);
+    color: var(--color-text);
+    font-family: var(--font-family-body), system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: var(--font-family-heading), Georgia, serif;
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -18,23 +49,23 @@
   }
 }
 
-/* Custom subtle scrollbars */
+/* Custom subtle scrollbars mapped to theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F4EBE1;
+  background: var(--color-primary-subtle);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DABFA0;
+  background: var(--color-primary-border);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B07D4F;
+  background: var(--color-primary);
 }
 
 /* Data grid inline cell transitions */

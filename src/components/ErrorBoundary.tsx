@@ -38,16 +38,18 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-[#FAF8F5] text-[#221C18] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full border border-[#E8D7C3] shadow-lg text-center space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-200 text-brand-700 flex items-center justify-center mx-auto">
-              <Store className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 border border-brand-300/40 text-amber-200 flex items-center justify-center mx-auto shadow-md">
+              <span className="font-serif font-black text-3xl tracking-tighter drop-shadow-md select-none">
+                Z
+              </span>
             </div>
 
             <div>
-              <h1 className="font-serif text-2xl font-bold text-stone-900">
-                ZNK ATELIER
+              <h1 className="font-serif text-2xl font-bold text-stone-900 uppercase">
+                ZNK PACKING
               </h1>
               <p className="text-xs text-stone-500 uppercase tracking-wider mt-0.5">
-                Gestão de Compras & Confecção
+                Gestão de Pedidos & Confecção
               </p>
             </div>
 

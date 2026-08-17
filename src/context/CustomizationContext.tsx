@@ -165,15 +165,38 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Dynamic CSS injector for Theme & Fonts
   useEffect(() => {
     const root = document.documentElement;
-    const palette = THEME_PALETTES[themeSettings.preset] || THEME_PALETTES.terracotta_champagne;
+    const palette = (THEME_PALETTES as any)[themeSettings.preset] || THEME_PALETTES.terracotta_champagne;
 
-    // Apply primary color
+    const hexToRgb = (hex: string): string => {
+      let clean = hex.replace('#', '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      const num = parseInt(clean, 16);
+      return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+    };
+
+    // Apply color palette variables (Hex and RGB channels for opacity support)
     root.style.setProperty('--color-primary', palette.primary);
+    root.style.setProperty('--color-primary-rgb', hexToRgb(palette.primary));
     root.style.setProperty('--color-primary-hover', palette.primaryHover);
-    root.style.setProperty('--color-bg-light', palette.bgLight);
-    root.style.setProperty('--color-border', palette.border);
+    root.style.setProperty('--color-primary-hover-rgb', hexToRgb(palette.primaryHover));
+    root.style.setProperty('--color-primary-light', palette.primaryLight || '#FAF6F0');
+    root.style.setProperty('--color-primary-light-rgb', hexToRgb(palette.primaryLight || '#FAF6F0'));
+    root.style.setProperty('--color-primary-subtle', palette.primarySubtle || '#F4EBE1');
+    root.style.setProperty('--color-primary-subtle-rgb', hexToRgb(palette.primarySubtle || '#F4EBE1'));
+    root.style.setProperty('--color-primary-border', palette.primaryBorder || palette.border);
+    root.style.setProperty('--color-primary-border-rgb', hexToRgb(palette.primaryBorder || palette.border));
+    root.style.setProperty('--color-primary-text', palette.primaryText || palette.primary);
+    root.style.setProperty('--color-primary-text-rgb', hexToRgb(palette.primaryText || palette.primary));
 
-    // Apply fonts
+    root.style.setProperty('--color-bg-light', palette.bgLight);
+    root.style.setProperty('--color-card-bg', palette.cardBg || '#FFFFFF');
+    root.style.setProperty('--color-border', palette.border);
+    root.style.setProperty('--color-text', palette.text);
+    root.style.setProperty('--color-text-muted', palette.textMuted || '#736B63');
+
+    // Apply fonts variables
+    root.style.setProperty('--font-family-body', `"${themeSettings.fontFamily}", sans-serif`);
+    root.style.setProperty('--font-family-heading', `"${themeSettings.headingFont}", Georgia, serif`);
     document.body.style.fontFamily = `"${themeSettings.fontFamily}", sans-serif`;
 
     // Apply dark mode class to document if needed

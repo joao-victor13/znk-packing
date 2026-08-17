@@ -42,13 +42,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center space-x-3 sm:space-x-4 cursor-pointer group" 
             onClick={() => onNavigate('list')}
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-md shadow-brand-900/10 group-hover:scale-105 transition-transform">
-              <Store className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 flex items-center justify-center text-white shadow-md shadow-brand-900/20 group-hover:scale-105 transition-transform border border-brand-300/40 relative overflow-hidden flex-shrink-0">
+              <span className="font-serif font-black text-2xl sm:text-3xl tracking-tighter text-amber-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] select-none leading-none pt-0.5">
+                Z
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/10 pointer-events-none" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-editorial-text uppercase">
-                  {storeSettings.storeName || 'ZNK ATELIER'}
+                  {storeSettings.storeName || 'ZNK PACKING'}
                 </span>
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-100 text-brand-800 tracking-wider uppercase border border-brand-300">
                   <Sparkles className="w-2.5 h-2.5 mr-1 text-brand-600" />

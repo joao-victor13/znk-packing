@@ -9,18 +9,18 @@ import {
 } from '../types';
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  storeName: 'ZNK Atelier',
-  tagline: 'Moda Feminina & Confecção Premium',
-  legalName: 'ZNK Comércio & Confecção de Roupas Femininas Ltda',
+  storeName: 'ZNK Packing',
+  tagline: 'Gestão de Pedidos de Compra & Confecção Feminina',
+  legalName: 'ZNK Packing Comércio & Confecção de Roupas Femininas Ltda',
   cnpj: '42.190.876/0001-33',
-  email: 'compras@znkatelier.com.br',
+  email: 'compras@znkpacking.com.br',
   phone: '11976543210',
   address: 'Rua Oscar Freire, 1420 - Jardins',
   city: 'São Paulo',
   state: 'SP',
   currencySymbol: 'R$',
-  footerNote: 'Ordem de Compra oficial sujeita aos termos de tolerância de 5% de corte.',
-  logoIcon: 'Crown',
+  footerNote: 'Ordem de Compra oficial ZNK Packing - Sujeita aos termos e controle de qualidade.',
+  logoIcon: 'Package',
 };
 
 export const THEME_PALETTES = {
@@ -30,10 +30,15 @@ export const THEME_PALETTES = {
     description: 'Tons acolhedores de caramelo, linho cru e bege editorial.',
     primary: '#B07D4F',
     primaryHover: '#8E5F36',
+    primaryLight: '#FAF6F0',
+    primarySubtle: '#F4EBE1',
+    primaryBorder: '#E8D7C3',
+    primaryText: '#4E3018',
     bgLight: '#FAF8F5',
     cardBg: '#FFFFFF',
     border: '#E8D7C3',
     text: '#221C18',
+    textMuted: '#736B63',
     previewColors: ['#B07D4F', '#FAF8F5', '#E8D7C3'],
   },
   rose_nude: {
@@ -42,10 +47,15 @@ export const THEME_PALETTES = {
     description: 'Estética feminina suave com tons de blush e ouro rosé.',
     primary: '#C65A5A',
     primaryHover: '#A93F3F',
+    primaryLight: '#FDF7F7',
+    primarySubtle: '#FAECEC',
+    primaryBorder: '#F4D4D4',
+    primaryText: '#7A2828',
     bgLight: '#FDF7F7',
     cardBg: '#FFFFFF',
     border: '#F4D4D4',
     text: '#2D1B1B',
+    textMuted: '#826262',
     previewColors: ['#C65A5A', '#FDF7F7', '#F4D4D4'],
   },
   emerald_slate: {
@@ -54,10 +64,15 @@ export const THEME_PALETTES = {
     description: 'Verde esmeralda sofisticado com ardósia neutro para alfaiataria.',
     primary: '#1E6B52',
     primaryHover: '#144F3C',
+    primaryLight: '#F2F8F5',
+    primarySubtle: '#E2EFE9',
+    primaryBorder: '#C7E0D5',
+    primaryText: '#0D3E2E',
     bgLight: '#F5F9F7',
     cardBg: '#FFFFFF',
     border: '#D0E3DB',
     text: '#132820',
+    textMuted: '#5A7A6E',
     previewColors: ['#1E6B52', '#F5F9F7', '#D0E3DB'],
   },
   noir_minimalist: {
@@ -66,10 +81,15 @@ export const THEME_PALETTES = {
     description: 'Haute couture pura: preto profundo, contrastes nítidos e linhas limpas.',
     primary: '#18181B',
     primaryHover: '#27272A',
+    primaryLight: '#F4F4F5',
+    primarySubtle: '#E4E4E7',
+    primaryBorder: '#D4D4D8',
+    primaryText: '#09090B',
     bgLight: '#FAFAFA',
     cardBg: '#FFFFFF',
     border: '#E4E4E7',
     text: '#09090B',
+    textMuted: '#71717A',
     previewColors: ['#18181B', '#FAFAFA', '#E4E4E7'],
   },
   lavender_silk: {
@@ -78,10 +98,15 @@ export const THEME_PALETTES = {
     description: 'Tons de lavanda suave, violeta pálido e seda natural.',
     primary: '#7C3AED',
     primaryHover: '#6D28D9',
+    primaryLight: '#FAF5FF',
+    primarySubtle: '#F3E8FF',
+    primaryBorder: '#E9D5FF',
+    primaryText: '#4C1D95',
     bgLight: '#FBF9FF',
     cardBg: '#FFFFFF',
     border: '#E9D5FF',
     text: '#2E1065',
+    textMuted: '#6D597A',
     previewColors: ['#7C3AED', '#FBF9FF', '#E9D5FF'],
   },
   bordeaux_velvet: {
@@ -90,10 +115,15 @@ export const THEME_PALETTES = {
     description: 'Vinho nobre, marsala e tons terrosos intensos.',
     primary: '#881337',
     primaryHover: '#70102D',
+    primaryLight: '#FFF1F2',
+    primarySubtle: '#FFE4E6',
+    primaryBorder: '#FECDD3',
+    primaryText: '#4C0519',
     bgLight: '#FFF5F7',
     cardBg: '#FFFFFF',
     border: '#FECDD3',
     text: '#4C0519',
+    textMuted: '#835360',
     previewColors: ['#881337', '#FFF5F7', '#FECDD3'],
   },
   dark_studio: {
@@ -101,12 +131,17 @@ export const THEME_PALETTES = {
     name: 'Dark Studio (Modo Noturno Luxo)',
     description: 'Interface escura sofisticada em grafite profundo com toques âmbar.',
     primary: '#D97706',
-    primaryHover: '#B45309',
-    bgLight: '#18181B',
-    cardBg: '#27272A',
-    border: '#3F3F46',
-    text: '#FAFAFA',
-    previewColors: ['#D97706', '#18181B', '#27272A'],
+    primaryHover: '#F59E0B',
+    primaryLight: '#27272A',
+    primarySubtle: '#3F3F46',
+    primaryBorder: '#52525B',
+    primaryText: '#FBBF24',
+    bgLight: '#121215',
+    cardBg: '#1C1C22',
+    border: '#2E2E38',
+    text: '#F4F4F5',
+    textMuted: '#A1A1AA',
+    previewColors: ['#D97706', '#121215', '#1C1C22'],
   },
 };
 
@@ -128,81 +163,9 @@ export const DEFAULT_CATEGORIES: CategoryItem[] = [
   { id: 'cat-5', name: 'Saias', badgeBg: 'bg-purple-50', badgeText: 'text-purple-800', badgeBorder: 'border-purple-200' },
   { id: 'cat-6', name: 'Casacos & Blazers', badgeBg: 'bg-blue-50', badgeText: 'text-blue-800', badgeBorder: 'border-blue-200' },
   { id: 'cat-7', name: 'Conjuntos', badgeBg: 'bg-orange-50', badgeText: 'text-orange-800', badgeBorder: 'border-orange-200' },
-  { id: 'cat-8', name: 'Jeans', badgeBg: 'bg-sky-50', badgeText: 'text-sky-800', badgeBorder: 'border-sky-200' },
-  { id: 'cat-9', name: 'Macacões', badgeBg: 'bg-teal-50', badgeText: 'text-teal-800', badgeBorder: 'border-teal-200' },
+  { id: 'cat-8', name: 'Lingerie & Noite', badgeBg: 'bg-pink-50', badgeText: 'text-pink-800', badgeBorder: 'border-pink-200' },
+  { id: 'cat-9', name: 'Beachwear', badgeBg: 'bg-teal-50', badgeText: 'text-teal-800', badgeBorder: 'border-teal-200' },
   { id: 'cat-10', name: 'Tricot', badgeBg: 'bg-yellow-50', badgeText: 'text-yellow-800', badgeBorder: 'border-yellow-200' },
-  { id: 'cat-11', name: 'Bodies', badgeBg: 'bg-pink-50', badgeText: 'text-pink-800', badgeBorder: 'border-pink-200' },
-  { id: 'cat-12', name: 'Camisas', badgeBg: 'bg-indigo-50', badgeText: 'text-indigo-800', badgeBorder: 'border-indigo-200' },
-];
-
-export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
-  admin: [
-    'orders_create',
-    'orders_edit',
-    'orders_delete',
-    'orders_approve',
-    'orders_view_costs',
-    'suppliers_manage',
-    'categories_manage',
-    'settings_manage',
-    'export_reports',
-  ],
-  buyer_stylist: [
-    'orders_create',
-    'orders_edit',
-    'orders_view_costs',
-    'suppliers_manage',
-    'export_reports',
-  ],
-  production_manager: [
-    'orders_create',
-    'orders_edit',
-    'orders_approve',
-    'suppliers_manage',
-    'export_reports',
-  ],
-  financial_auditor: [
-    'orders_view_costs',
-    'export_reports',
-  ],
-  sales_assistant: [
-    'export_reports',
-  ],
-};
-
-export const DEFAULT_USERS: SystemUser[] = [
-  {
-    id: 'user-1',
-    name: 'Helena Zanetti',
-    email: 'helena.zanetti@znkatelier.com.br',
-    avatarBg: 'bg-brand-600',
-    role: 'admin',
-    roleTitle: 'Diretora Criativa & Admin',
-  },
-  {
-    id: 'user-2',
-    name: 'Camila Drummond',
-    email: 'camila.compras@znkatelier.com.br',
-    avatarBg: 'bg-rose-500',
-    role: 'buyer_stylist',
-    roleTitle: 'Estilista & Compradora Sênior',
-  },
-  {
-    id: 'user-3',
-    name: 'Marcelo Brandão',
-    email: 'pcp.producao@znkatelier.com.br',
-    avatarBg: 'bg-blue-600',
-    role: 'production_manager',
-    roleTitle: 'Gerente de Produção & PCP',
-  },
-  {
-    id: 'user-4',
-    name: 'Luciana Faria',
-    email: 'financeiro@znkatelier.com.br',
-    avatarBg: 'bg-emerald-600',
-    role: 'financial_auditor',
-    roleTitle: 'Controladoria & Financeiro',
-  },
 ];
 
 export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
@@ -213,3 +176,72 @@ export const DEFAULT_LAYOUT_SETTINGS: LayoutSettings = {
   compactSidebar: false,
   hideFinancialValues: false,
 };
+
+export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
+  admin: [
+    'orders_create', 'orders_edit', 'orders_delete', 'orders_approve', 'orders_view_costs',
+    'suppliers_manage', 'categories_manage', 'settings_manage', 'export_reports'
+  ],
+  buyer_stylist: [
+    'orders_create', 'orders_edit', 'orders_view_costs',
+    'suppliers_manage', 'categories_manage', 'export_reports'
+  ],
+  production_manager: [
+    'orders_edit', 'orders_approve',
+    'suppliers_manage', 'export_reports'
+  ],
+  financial_auditor: [
+    'orders_view_costs', 'export_reports'
+  ],
+  sales_assistant: [
+    'export_reports'
+  ],
+};
+
+export const DEFAULT_USERS: SystemUser[] = [
+  {
+    id: 'usr-1',
+    name: 'Helena Zink',
+    email: 'helena@znkpacking.com.br',
+    role: 'admin',
+    roleTitle: 'Diretora Criativa & Admin',
+    avatarBg: 'bg-brand-600',
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.admin,
+  },
+  {
+    id: 'usr-2',
+    name: 'Camila Duarte',
+    email: 'camila.duarte@znkpacking.com.br',
+    role: 'buyer_stylist',
+    roleTitle: 'Estilista & Compradora Sênior',
+    avatarBg: 'bg-rose-500',
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.buyer_stylist,
+  },
+  {
+    id: 'usr-3',
+    name: 'Rodrigo Mendes',
+    email: 'rodrigo.pcp@znkpacking.com.br',
+    role: 'production_manager',
+    roleTitle: 'Gerente de Produção & PCP',
+    avatarBg: 'bg-blue-600',
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.production_manager,
+  },
+  {
+    id: 'usr-4',
+    name: 'Mariana Rocha',
+    email: 'financeiro@znkpacking.com.br',
+    role: 'financial_auditor',
+    roleTitle: 'Controladoria & Custos',
+    avatarBg: 'bg-emerald-600',
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.financial_auditor,
+  },
+  {
+    id: 'usr-5',
+    name: 'Beatriz Lima',
+    email: 'assistente@znkpacking.com.br',
+    role: 'sales_assistant',
+    roleTitle: 'Assistente de Estoque',
+    avatarBg: 'bg-purple-600',
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.sales_assistant,
+  },
+];

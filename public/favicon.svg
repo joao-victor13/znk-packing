@@ -18,13 +18,22 @@
     </filter>
   </defs>
 
+  <!-- Background Squircle with Subtle Gold Border -->
   <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#znkBg)" stroke="url(#znkGold)" stroke-width="8"/>
+  
+  <!-- Subtle Packing / Fashion Diagonal Box Accents -->
   <path d="M 120 120 L 392 120" stroke="url(#znkAccent)" stroke-width="4" stroke-opacity="0.3" stroke-dasharray="8 8"/>
   <path d="M 120 392 L 392 392" stroke="url(#znkAccent)" stroke-width="4" stroke-opacity="0.3" stroke-dasharray="8 8"/>
 
+  <!-- Iconic Haute Couture "Z" Monogram with Fashion Serif Cuts -->
   <g filter="url(#shadow)">
+    <!-- Top Horizontal Bar of Z with Serif -->
     <path d="M 130 148 L 382 148 L 382 196 L 244 340 L 382 340 L 382 388 L 130 388 L 130 340 L 268 196 L 130 196 Z" fill="url(#znkGold)"/>
+    
+    <!-- Delicate Interior Diagonal Cut Accent -->
     <polygon points="144,160 368,160 368,184 256,300 144,300" fill="#FFFFFF" fill-opacity="0.12"/>
+    
+    <!-- Central Modern Diamond / Jewel Pivot -->
     <polygon points="256,252 268,268 256,284 244,268" fill="#FFFFFF" fill-opacity="0.9"/>
   </g>
 </svg>

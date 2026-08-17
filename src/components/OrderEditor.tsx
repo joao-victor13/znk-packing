@@ -309,7 +309,7 @@ export const OrderEditor: React.FC<OrderEditorProps> = ({
     const sup = suppliers.find(s => s.id === selectedSupplierId);
     const phone = sup?.phone.replace(/\D/g, '') || '';
     
-    const storeTitle = (storeSettings.storeName || 'ZNK ATELIER').toUpperCase();
+    const storeTitle = (storeSettings.storeName || 'ZNK PACKING').toUpperCase();
     let text = `*${storeTitle} - ORDEM DE COMPRA Nº ${orderNumber}*\n`;
     text += `Olá ${sup?.contactName || 'Equipe Comercial'},\n\n`;
     text += `Segue nosso pedido de confecção formal:\n`;
@@ -645,7 +645,7 @@ export const OrderEditor: React.FC<OrderEditorProps> = ({
               type="text"
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Ex: Embalagem individual, dobrada em cabides, aviamentos dourados, etiqueta da ZNK Atelier inclusa..."
+              placeholder="Ex: Embalagem individual, dobrada em cabides, aviamentos de qualidade, etiqueta da ZNK Packing inclusa..."
               className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
