@@ -22,6 +22,15 @@ import {
 } from './data/initialData';
 import { getDeliveryDeadlineStatus } from './utils/calculations';
 import { CustomizationProvider, useCustomization } from './context/CustomizationContext';
+import { 
+  fetchOrdersFromSupabase, 
+  fetchSuppliersFromSupabase,
+  saveOrderToSupabase,
+  updateOrderStatusInSupabase,
+  deleteOrderFromSupabase,
+  saveSupplierToSupabase,
+  deleteSupplierFromSupabase
+} from './services/supabaseClient';
 
 function AppContent() {
   const { layoutSettings } = useCustomization();
@@ -47,6 +56,30 @@ function AppContent() {
     }
     return INITIAL_SUPPLIERS;
   });
+
+  // Load latest data from Supabase on mount
+  useEffect(() => {
+    async function loadCloudData() {
+      try {
+        const [cloudSuppliers, cloudOrders] = await Promise.all([
+          fetchSuppliersFromSupabase(),
+          fetchOrdersFromSupabase()
+        ]);
+
+        if (cloudSuppliers && cloudSuppliers.length > 0) {
+          setSuppliers(cloudSuppliers);
+          localStorage.setItem('znk_fashion_suppliers', JSON.stringify(cloudSuppliers));
+        }
+        if (cloudOrders && cloudOrders.length > 0) {
+          setOrders(cloudOrders);
+          localStorage.setItem('znk_fashion_orders', JSON.stringify(cloudOrders));
+        }
+      } catch (err) {
+        console.warn('Could not sync with Supabase on load, using local cache', err);
+      }
+    }
+    loadCloudData();
+  }, []);
 
   // Save to localStorage when state changes
   useEffect(() => {
@@ -157,12 +190,14 @@ function AppContent() {
     };
     setOrders(prev => [cloned, ...prev]);
     showToast(`Pedido ${order.orderNumber} duplicado como ${nextNum}!`, 'success');
+    saveOrderToSupabase(cloned);
   };
 
   // Delete order
   const handleDeleteOrder = (orderId: string) => {
     setOrders(prev => prev.filter(o => o.id !== orderId));
     showToast('Pedido excluído com sucesso.', 'info');
+    deleteOrderFromSupabase(orderId);
   };
 
   // Quick Status Update
@@ -171,21 +206,21 @@ function AppContent() {
       prev.map(o => (o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o))
     );
     showToast(`Status atualizado para: ${status}`, 'success');
+    updateOrderStatusInSupabase(orderId, status);
   };
 
   // Save Order from Editor
   const handleSaveOrder = (savedOrder: PurchaseOrder) => {
     if (orderToEdit) {
-      // Update
       setOrders(prev => prev.map(o => (o.id === savedOrder.id ? savedOrder : o)));
       showToast(`Pedido ${savedOrder.orderNumber} atualizado com sucesso!`, 'success');
     } else {
-      // Create
       setOrders(prev => [savedOrder, ...prev]);
       showToast(`Pedido ${savedOrder.orderNumber} criado e registrado!`, 'success');
     }
     setActiveView('list');
     setOrderToEdit(null);
+    saveOrderToSupabase(savedOrder);
   };
 
   // Save Supplier
@@ -198,12 +233,14 @@ function AppContent() {
       showToast(`Fornecedor ${savedSupplier.tradeName} cadastrado com sucesso!`, 'success');
     }
     setSupplierToEdit(null);
+    saveSupplierToSupabase(savedSupplier);
   };
 
   // Delete Supplier
   const handleDeleteSupplier = (supplierId: string) => {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
     showToast('Fornecedor removido com sucesso.', 'info');
+    deleteSupplierFromSupabase(supplierId);
   };
 
   // Filter and Sort Orders
@@ -251,7 +288,7 @@ function AppContent() {
   });
 
   return (
-    <div className="min-h-screen bg-editorial-light text-editorial-text flex flex-col">
+    <div className="min-h-screen bg-editorial-light dark:bg-stone-950 text-editorial-text dark:text-stone-100 flex flex-col transition-colors">
       {/* Top Navigation */}
       <Navbar
         activeView={activeView}
@@ -264,31 +301,31 @@ function AppContent() {
         onResetToDemo={handleResetToDemo}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* VIEW 1: Settings & Customization Center */}
-        {activeView === 'settings' && (
-          <SettingsView onShowToast={showToast} />
-        )}
-
-        {/* VIEW 2: Editor (Spreadsheet Data Grid) */}
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* VIEW 1: Order Editor (Full spreadsheet mode) */}
         {activeView === 'editor' && (
           <OrderEditor
             orderToEdit={orderToEdit}
-            existingOrders={orders}
             suppliers={suppliers}
+            existingOrders={orders}
             onSave={handleSaveOrder}
             onCancel={() => {
               setActiveView('list');
               setOrderToEdit(null);
             }}
+            onShowToast={showToast}
+            onPreviewPrint={order => setPreviewOrder(order)}
             onOpenNewSupplierModal={() => {
               setSupplierToEdit(null);
               setIsSupplierModalOpen(true);
             }}
-            onShowToast={showToast}
-            onPreviewPrint={order => setPreviewOrder(order)}
           />
+        )}
+
+        {/* VIEW 2: Settings & Customization Center */}
+        {activeView === 'settings' && (
+          <SettingsView onShowToast={showToast} />
         )}
 
         {/* VIEW 3: Suppliers Directory */}
@@ -331,7 +368,7 @@ function AppContent() {
               availableMonths={availableMonths}
             />
 
-            {/* List / Grouped or Kanban Content */}
+            {/* Orders Data Grid or Kanban */}
             {viewMode === 'kanban' ? (
               <OrderKanbanView
                 orders={filteredOrders}
@@ -355,25 +392,27 @@ function AppContent() {
         )}
       </main>
 
-      {/* Supplier Modal */}
+      {/* Supplier Create/Edit Modal */}
       <SupplierModal
         isOpen={isSupplierModalOpen}
-        supplierToEdit={supplierToEdit}
         onClose={() => {
           setIsSupplierModalOpen(false);
           setSupplierToEdit(null);
         }}
         onSave={handleSaveSupplier}
+        supplierToEdit={supplierToEdit}
       />
 
-      {/* Order Preview Modal */}
-      <OrderPreviewModal
-        isOpen={!!previewOrder}
-        order={previewOrder}
-        onClose={() => setPreviewOrder(null)}
-      />
+      {/* Printable Preview Document Modal */}
+      {previewOrder && (
+        <OrderPreviewModal
+          isOpen={!!previewOrder}
+          order={previewOrder}
+          onClose={() => setPreviewOrder(null)}
+        />
+      )}
 
-      {/* Toast Notifications */}
+      {/* Global Toast Notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
