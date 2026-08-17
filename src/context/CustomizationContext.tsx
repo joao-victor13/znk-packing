@@ -52,7 +52,10 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(() => {
     try {
       const saved = localStorage.getItem('znk_store_settings');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return { ...DEFAULT_STORE_SETTINGS, ...parsed };
+      }
     } catch (e) {
       console.error(e);
     }
@@ -63,7 +66,10 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(() => {
     try {
       const saved = localStorage.getItem('znk_theme_settings');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return { ...DEFAULT_THEME_SETTINGS, ...parsed };
+      }
     } catch (e) {
       console.error(e);
     }
@@ -74,7 +80,10 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [categories, setCategories] = useState<CategoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('znk_categories');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -85,7 +94,10 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [users, setUsers] = useState<SystemUser[]>(() => {
     try {
       const saved = localStorage.getItem('znk_users');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -96,21 +108,36 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentUser, setCurrentUserState] = useState<SystemUser>(() => {
     try {
       const savedId = localStorage.getItem('znk_current_user_id');
+      const userList = (() => {
+        try {
+          const saved = localStorage.getItem('znk_users');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch {}
+        return DEFAULT_USERS;
+      })();
+
       if (savedId) {
-        const found = users.find(u => u.id === savedId);
+        const found = userList.find((u: SystemUser) => u.id === savedId);
         if (found) return found;
       }
+      return userList[0] || DEFAULT_USERS[0];
     } catch (e) {
       console.error(e);
+      return DEFAULT_USERS[0];
     }
-    return users[0] || DEFAULT_USERS[0];
   });
 
   // Layout Settings
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
     try {
       const saved = localStorage.getItem('znk_layout_settings');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return { ...DEFAULT_LAYOUT_SETTINGS, ...parsed };
+      }
     } catch (e) {
       console.error(e);
     }
