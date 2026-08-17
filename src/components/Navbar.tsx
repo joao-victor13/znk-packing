@@ -2,16 +2,15 @@ import React from 'react';
 import { 
   Sparkles, 
   PlusCircle, 
-  Store, 
   FileSpreadsheet, 
   Users, 
   SlidersHorizontal,
   Download, 
-  RotateCcw,
-  Shield,
-  UserCheck
+  Sun,
+  Moon,
+  Monitor
 } from 'lucide-react';
-import { PurchaseOrder } from '../types';
+import { PurchaseOrder, ThemeMode } from '../types';
 import { exportOrdersListToExcel } from '../utils/exportExcel';
 import { useCustomization } from '../context/CustomizationContext';
 
@@ -28,13 +27,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   onNewOrder,
   orders,
-  onResetToDemo,
 }) => {
-  const { storeSettings, currentUser, hasPermission } = useCustomization();
+  const { storeSettings, currentUser, hasPermission, themeMode, setThemeMode } = useCustomization();
   const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
 
+  const cycleTheme = () => {
+    const nextMode: Record<ThemeMode, ThemeMode> = {
+      light: 'dark',
+      dark: 'system',
+      system: 'light',
+    };
+    setThemeMode(nextMode[themeMode] || 'light');
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-brand-200 shadow-soft">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-brand-200 dark:border-stone-800 shadow-soft transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Brand Logo & Store Name */}
@@ -50,16 +57,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-editorial-text uppercase">
+                <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-editorial-text dark:text-stone-100 uppercase">
                   {storeSettings.storeName || 'ZNK PACKING'}
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-100 text-brand-800 tracking-wider uppercase border border-brand-300">
-                  <Sparkles className="w-2.5 h-2.5 mr-1 text-brand-600" />
-                  Boutique ERP
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-100 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 tracking-wider uppercase border border-brand-300 dark:border-brand-800">
+                  <Sparkles className="w-2.5 h-2.5 mr-1 text-brand-600 dark:text-brand-400" />
+                  ERP
                 </span>
               </div>
-              <p className="text-[11px] text-editorial-muted hidden sm:block truncate max-w-xs">
-                {storeSettings.tagline || 'Gestão de Pedidos de Compra & Confecção Feminina'}
+              <p className="text-[11px] text-editorial-muted dark:text-stone-400 hidden sm:block truncate max-w-xs">
+                {storeSettings.tagline || 'Gestão de Pedidos & Confecção'}
               </p>
             </div>
           </div>
@@ -69,13 +76,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Painel de Pedidos */}
             <button
               onClick={() => onNavigate('list')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
                 activeView === 'list'
-                  ? 'bg-brand-100 text-brand-900 font-semibold shadow-xs'
-                  : 'text-editorial-muted hover:text-editorial-text hover:bg-stone-100'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4 text-brand-600" />
+              <FileSpreadsheet className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <span>Pedidos</span>
               {activeOrdersCount > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 bg-brand-600 text-white rounded-full text-[10px] font-bold">
@@ -87,63 +94,71 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Fornecedores */}
             <button
               onClick={() => onNavigate('suppliers')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
                 activeView === 'suppliers'
-                  ? 'bg-brand-100 text-brand-900 font-semibold shadow-xs'
-                  : 'text-editorial-muted hover:text-editorial-text hover:bg-stone-100'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <Users className="w-4 h-4 text-brand-600" />
+              <Users className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <span>Fornecedores</span>
             </button>
 
             {/* Customização & Configurações */}
             <button
               onClick={() => onNavigate('settings')}
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-150 flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
                 activeView === 'settings'
-                  ? 'bg-brand-100 text-brand-900 font-semibold shadow-xs'
-                  : 'text-editorial-muted hover:text-editorial-text hover:bg-stone-100'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <SlidersHorizontal className="w-4 h-4 text-brand-600" />
-              <span>Customizar</span>
+              <SlidersHorizontal className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <span>Configurar</span>
             </button>
 
-            {/* Export All Orders (if permitted) */}
+            {/* Export All Orders */}
             {hasPermission('export_reports') && (
               <button
                 onClick={() => exportOrdersListToExcel(orders)}
-                title="Exportar consolidado de pedidos em Excel (.xlsx)"
-                className="p-2 rounded-lg text-editorial-muted hover:text-emerald-700 hover:bg-emerald-50 transition-colors hidden lg:flex items-center space-x-1 text-xs"
+                title="Exportar consolidado em Excel (.xlsx)"
+                className="p-2 rounded-lg text-editorial-muted dark:text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors hidden lg:flex items-center space-x-1 text-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>Exportar Geral</span>
+                <span>Excel</span>
               </button>
             )}
+
+            {/* Light / Dark / System Quick Toggle */}
+            <button
+              onClick={cycleTheme}
+              title={`Tema atual: ${themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Escuro' : 'Automático / Sistema'}. Clique para alternar.`}
+              className="p-2 rounded-lg text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center justify-center"
+            >
+              {themeMode === 'light' && <Sun className="w-4 h-4 text-amber-500" />}
+              {themeMode === 'dark' && <Moon className="w-4 h-4 text-brand-400" />}
+              {themeMode === 'system' && <Monitor className="w-4 h-4 text-stone-500 dark:text-stone-400" />}
+            </button>
 
             {/* Active User Avatar Pill */}
             <div 
               onClick={() => onNavigate('settings')}
-              title={`Logado como: ${currentUser.name} (${currentUser.roleTitle}). Clique para gerenciar permissões.`}
-              className="flex items-center space-x-1.5 pl-2 pr-2.5 py-1 bg-stone-100 hover:bg-brand-50 rounded-full border border-stone-200 cursor-pointer transition-colors"
+              title={`Usuário: ${currentUser.name} (${currentUser.roleTitle})`}
+              className="flex items-center space-x-1.5 pl-2 pr-2.5 py-1 bg-stone-100 dark:bg-stone-800 hover:bg-brand-50 dark:hover:bg-stone-700 rounded-full border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors"
             >
               <div className={`w-6 h-6 rounded-full ${currentUser.avatarBg} text-white font-bold flex items-center justify-center text-[10px]`}>
                 {currentUser.name.charAt(0)}
               </div>
-              <span className="text-xs font-semibold text-editorial-text hidden md:inline truncate max-w-[100px]">
+              <span className="text-xs font-semibold text-editorial-text dark:text-stone-200 hidden md:inline truncate max-w-[100px]">
                 {currentUser.name.split(' ')[0]}
-              </span>
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-white text-brand-900 font-mono hidden xl:inline border border-stone-200">
-                {currentUser.role === 'admin' ? 'Admin' : currentUser.roleTitle.split(' ')[0]}
               </span>
             </div>
 
-            {/* Primary Action: Novo Pedido (if permitted) */}
+            {/* Primary Action: Novo Pedido */}
             {hasPermission('orders_create') && (
               <button
                 onClick={onNewOrder}
-                className="ml-1 sm:ml-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm transition-all duration-150 flex items-center space-x-1.5 shadow-sm hover:shadow-md active:scale-95"
+                className="ml-1 sm:ml-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm transition-all flex items-center space-x-1.5 shadow-sm active:scale-95 flex-shrink-0"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span className="hidden sm:inline">Novo Pedido</span>

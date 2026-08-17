@@ -89,9 +89,9 @@ export function exportOrderToPdf(order: PurchaseOrder, customStore?: StoreSettin
   doc.setFontSize(8);
   doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
   doc.text(`Razão Social: ${order.supplierName}`, 18, y + 17);
-  doc.text(`CNPJ: ${formatCNPJ(order.supplierCnpj)}`, 18, y + 22);
+  doc.text(`CNPJ: ${formatCNPJ(order.supplierCnpj || '')}`, 18, y + 22);
   doc.text(`Contato: ${order.supplierContact || '-'}`, 18, y + 27);
-  doc.text(`Tel/Whats: ${formatPhone(order.supplierPhone)} | ${order.supplierEmail || ''}`, 18, y + 32);
+  doc.text(`Tel/Whats: ${formatPhone(order.supplierPhone || '')} | ${order.supplierEmail || ''}`, 18, y + 32);
 
   // Box 2: Order Terms & Conditions
   doc.roundedRect(108, y, 88, 38, 2, 2, 'FD');

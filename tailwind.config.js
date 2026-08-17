@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -29,13 +30,13 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['var(--font-family-body, "Plus Jakarta Sans")', 'Inter', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-family-heading, "Playfair Display")', 'Georgia', 'serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
       boxShadow: {
-        'soft': '0 2px 10px -2px rgba(45, 30, 15, 0.05), 0 1px 3px -1px rgba(45, 30, 15, 0.04)',
-        'card': '0 4px 20px -2px rgba(45, 30, 15, 0.06), 0 2px 6px -1px rgba(45, 30, 15, 0.03)',
-        'dropdown': '0 10px 30px -5px rgba(45, 30, 15, 0.12), 0 4px 10px -2px rgba(45, 30, 15, 0.05)',
+        'soft': '0 2px 10px -2px rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.03)',
+        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
+        'dropdown': '0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.05)',
       }
     },
   },

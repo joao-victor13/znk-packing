@@ -22,21 +22,36 @@
   --color-border: #E8D7C3;
   --color-text: #221C18;
   --color-text-muted: #736B63;
-  --font-family-body: 'Plus Jakarta Sans';
-  --font-family-heading: 'Playfair Display';
+}
+
+.dark {
+  --color-primary-rgb: 217, 119, 6;
+  --color-primary-hover-rgb: 245, 158, 11;
+  --color-primary-light-rgb: 39, 39, 42;
+  --color-primary-subtle-rgb: 63, 63, 70;
+  --color-primary-border-rgb: 82, 82, 91;
+  --color-primary-text-rgb: 251, 191, 36;
+
+  --color-primary: #D97706;
+  --color-primary-hover: #F59E0B;
+  --color-primary-light: #27272A;
+  --color-primary-subtle: #3F3F46;
+  --color-primary-border: #52525B;
+  --color-primary-text: #FBBF24;
+
+  --color-bg-light: #121215;
+  --color-card-bg: #1A1A22;
+  --color-border: #2E2E38;
+  --color-text: #F3F4F6;
+  --color-text-muted: #9CA3AF;
 }
 
 @layer base {
   body {
     background-color: var(--color-bg-light);
     color: var(--color-text);
-    font-family: var(--font-family-body), system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-
-  h1, h2, h3, .font-serif {
-    font-family: var(--font-family-heading), Georgia, serif;
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -70,7 +85,7 @@
 
 /* Data grid inline cell transitions */
 .grid-cell-input {
-  @apply w-full bg-transparent px-2.5 py-1.5 text-sm outline-none transition-all duration-150 rounded border border-transparent hover:border-brand-200 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20;
+  @apply w-full bg-transparent px-2.5 py-1.5 text-sm outline-none transition-all duration-150 rounded border border-transparent hover:border-brand-200 focus:border-brand-500 focus:bg-white dark:focus:bg-stone-900 focus:ring-2 focus:ring-brand-500/20;
 }
 
 .grid-cell-number {

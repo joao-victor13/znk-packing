@@ -127,13 +127,13 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                 <strong>Razão Social:</strong> {order.supplierName}
               </div>
               <div className="text-editorial-muted font-mono">
-                <strong>CNPJ:</strong> {formatCNPJ(order.supplierCnpj)}
+                <strong>CNPJ:</strong> {formatCNPJ(order.supplierCnpj || '')}
               </div>
               <div className="text-editorial-muted">
-                <strong>Contato Comercial:</strong> {order.supplierContact}
+                <strong>Contato Comercial:</strong> {order.supplierContact || '-'}
               </div>
               <div className="text-editorial-muted">
-                <strong>WhatsApp / Tel:</strong> {formatPhone(order.supplierPhone)}
+                <strong>WhatsApp / Tel:</strong> {formatPhone(order.supplierPhone || '')}
               </div>
             </div>
 

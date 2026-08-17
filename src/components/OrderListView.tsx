@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  Eye, 
   Edit3, 
   FileText, 
   FileSpreadsheet, 
@@ -10,12 +9,7 @@ import {
   ChevronDown, 
   ChevronRight, 
   Calendar, 
-  Package, 
   Building2, 
-  CheckCircle2, 
-  Clock, 
-  Truck, 
-  XCircle, 
   Sparkles,
   Plus
 } from 'lucide-react';
@@ -52,6 +46,8 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 }) => {
   const { storeSettings, layoutSettings, hasPermission } = useCustomization();
   const canViewCosts = hasPermission('orders_view_costs') && !layoutSettings.hideFinancialValues;
+  const canEditOrders = hasPermission('orders_edit');
+  const canDeleteOrders = hasPermission('orders_delete');
 
   // Expanded rows state
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
@@ -62,18 +58,18 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case 'draft':
-        return { label: 'Rascunho', class: 'bg-stone-100 text-stone-700 border-stone-300' };
       case 'pending':
-        return { label: 'Pendente', class: 'bg-amber-50 text-amber-800 border-amber-300' };
+        return { label: 'Pendente', class: 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/40' };
       case 'approved':
-        return { label: 'Em Produção', class: 'bg-blue-50 text-blue-800 border-blue-300' };
+        return { label: 'Em Produção', class: 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800/40' };
       case 'in_transit':
-        return { label: 'Em Trânsito', class: 'bg-purple-50 text-purple-800 border-purple-300' };
+        return { label: 'Em Trânsito', class: 'bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800/40' };
       case 'delivered':
-        return { label: 'Entregue / Faturado', class: 'bg-emerald-50 text-emerald-800 border-emerald-300' };
+        return { label: 'Entregue / Faturado', class: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/40' };
       case 'cancelled':
-        return { label: 'Cancelado', class: 'bg-rose-50 text-rose-800 border-rose-200' };
+        return { label: 'Cancelado', class: 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
+      default:
+        return { label: status, class: 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700' };
     }
   };
 
@@ -83,39 +79,35 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
     text += `Olá ${order.supplierContact || 'Equipe'},\n`;
     text += `Gostaríamos de confirmar o status da nossa produção:\n`;
     text += `📅 *Previsão de Entrega:* ${formatDate(order.expectedDeliveryDate)}\n`;
-    text += `📦 *Total de Peças:* ${order.totalPieces} un | 💰 *Total:* ${formatCurrency(order.totalAmount)}\n`;
-    text += `🏷️ *Coleção:* ${order.collection}\n\n`;
-    text += `Podem nos confirmar a previsão de despacho? Obrigado!`;
+    text += `👗 *Total de Peças:* ${order.totalPieces} unidades\n`;
+    text += `\nCaso tenha alguma atualização, por favor nos informe por aqui. Obrigado!`;
 
-    const url = phone
-      ? `https://wa.me/55${phone}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
-
+    const encodedText = encodeURIComponent(text);
+    const url = phone ? `https://wa.me/55${phone}?text=${encodedText}` : `https://wa.me/?text=${encodedText}`;
     window.open(url, '_blank');
-    onShowToast('Mensagem de WhatsApp formatada!', 'success');
   };
 
   if (orders.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-12 border border-brand-200 shadow-soft text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center mx-auto text-brand-600">
-          <Package className="w-8 h-8" />
+      <div className="bg-white dark:bg-stone-900 rounded-xl p-10 text-center border border-brand-200 dark:border-stone-800 shadow-soft">
+        <div className="w-12 h-12 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto mb-3">
+          <FileSpreadsheet className="w-6 h-6" />
         </div>
-        <div>
-          <h3 className="text-lg font-serif font-bold text-editorial-text">
-            Nenhum pedido encontrado
-          </h3>
-          <p className="text-xs sm:text-sm text-editorial-muted max-w-md mx-auto mt-1">
-            Não há pedidos de compra correspondentes aos filtros selecionados. Crie um novo pedido ou limpe os filtros.
-          </p>
-        </div>
-        <button
-          onClick={onNewOrder}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Criar Primeiro Pedido de Compra</span>
-        </button>
+        <h3 className="font-serif font-bold text-base text-editorial-text dark:text-stone-100">
+          Nenhum pedido encontrado
+        </h3>
+        <p className="text-xs text-editorial-muted dark:text-stone-400 mt-1 max-w-sm mx-auto">
+          Crie um novo pedido ou ajuste os filtros da busca para visualizar as ordens de compra.
+        </p>
+        {hasPermission('orders_create') && (
+          <button
+            onClick={onNewOrder}
+            className="mt-4 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs shadow-xs inline-flex items-center space-x-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Criar Primeiro Pedido</span>
+          </button>
+        )}
       </div>
     );
   }
@@ -123,20 +115,20 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
   // Render list of orders table
   const renderOrdersTable = (orderList: PurchaseOrder[]) => (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[980px]">
+      <table className="w-full text-left border-collapse min-w-[940px]">
         <thead>
-          <tr className="bg-brand-50/70 border-b border-brand-200 text-[11px] font-semibold uppercase tracking-wider text-editorial-muted">
-            <th className="py-3 px-3 w-10 text-center"></th>
-            <th className="py-3 px-3 w-32">Nº Pedido</th>
-            <th className="py-3 px-3 w-56">Fornecedor</th>
-            <th className="py-3 px-3 w-36">Status</th>
-            <th className="py-3 px-3 w-36">Previsão Entrega</th>
-            <th className="py-3 px-3 w-28 text-right">Volume</th>
-            <th className="py-3 px-3 w-36 text-right">Valor Total</th>
-            <th className="py-3 px-3 w-48 text-center">Ações Rápidas</th>
+          <tr className="bg-brand-50/70 dark:bg-stone-800/80 border-b border-brand-200 dark:border-stone-800 text-[11px] font-semibold uppercase tracking-wider text-editorial-muted dark:text-stone-400">
+            <th className="py-2.5 px-3 w-10 text-center"></th>
+            <th className="py-2.5 px-3 w-32">Nº Pedido</th>
+            <th className="py-2.5 px-3 w-52">Fornecedor</th>
+            <th className="py-2.5 px-3 w-36">Status</th>
+            <th className="py-2.5 px-3 w-36">Entrega</th>
+            <th className="py-2.5 px-3 w-28 text-right">Volume</th>
+            <th className="py-2.5 px-3 w-36 text-right">Valor Total</th>
+            <th className="py-2.5 px-3 w-40 text-center">Ações</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-200/80 text-xs">
+        <tbody className="divide-y divide-stone-200/70 dark:divide-stone-800 text-xs">
           {orderList.map(order => {
             const isExpanded = !!expandedOrders[order.id];
             const deadline = getDeliveryDeadlineStatus(order.expectedDeliveryDate, order.status);
@@ -144,16 +136,16 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
             return (
               <React.Fragment key={order.id}>
-                <tr className="hover:bg-brand-50/30 transition-colors group">
+                <tr className="hover:bg-brand-50/30 dark:hover:bg-stone-800/40 transition-colors group">
                   {/* Expand Chevron */}
-                  <td className="py-3 px-2 text-center">
+                  <td className="py-2.5 px-2 text-center">
                     <button
                       onClick={() => toggleExpand(order.id)}
-                      className="p-1 text-stone-400 hover:text-brand-700 rounded transition-colors"
+                      className="p-1 text-stone-400 hover:text-brand-700 dark:hover:text-stone-200 rounded transition-colors"
                       title={isExpanded ? 'Ocultar itens' : 'Ver itens do pedido'}
                     >
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-brand-700" />
+                        <ChevronDown className="w-4 h-4 text-brand-700 dark:text-brand-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />
                       )}
@@ -161,193 +153,208 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                   </td>
 
                   {/* Order Number & Collection */}
-                  <td className="py-3 px-3">
-                    <div className="font-mono font-bold text-brand-900 text-sm">
+                  <td className="py-2.5 px-3">
+                    <div className="font-mono font-bold text-brand-900 dark:text-brand-300 text-xs sm:text-sm">
                       {order.orderNumber}
                     </div>
-                    <div className="text-[11px] text-editorial-muted truncate max-w-[140px]" title={order.collection}>
-                      {order.collection || 'Coleção Geral'}
+                    <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate max-w-[130px]" title={order.collection}>
+                      {order.collection || 'Geral'}
                     </div>
                   </td>
 
                   {/* Supplier & Contact */}
-                  <td className="py-3 px-3">
-                    <div className="font-semibold text-editorial-text truncate max-w-[200px]" title={order.supplierTradeName || order.supplierName}>
+                  <td className="py-2.5 px-3">
+                    <div className="font-semibold text-editorial-text dark:text-stone-200 truncate max-w-[190px]" title={order.supplierTradeName || order.supplierName}>
                       {order.supplierTradeName || order.supplierName}
                     </div>
-                    <div className="text-[11px] text-editorial-muted">
+                    <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
                       {order.supplierContact || order.paymentTerms}
                     </div>
                   </td>
 
                   {/* Status Dropdown */}
-                  <td className="py-3 px-3">
-                    <select
-                      value={order.status}
-                      onChange={e => onUpdateStatus(order.id, e.target.value as OrderStatus)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border cursor-pointer focus:outline-none ${statusBadge.class}`}
-                    >
-                      <option value="draft">Rascunho</option>
-                      <option value="pending">Pendente</option>
-                      <option value="approved">Em Produção</option>
-                      <option value="in_transit">Em Trânsito</option>
-                      <option value="delivered">Entregue / Faturado</option>
-                      <option value="cancelled">Cancelado</option>
-                    </select>
+                  <td className="py-2.5 px-3">
+                    {canEditOrders ? (
+                      <select
+                        value={order.status}
+                        onChange={e => onUpdateStatus(order.id, e.target.value as OrderStatus)}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border cursor-pointer focus:outline-none ${statusBadge.class}`}
+                      >
+                        <option value="pending">Pendente</option>
+                        <option value="approved">Em Produção</option>
+                        <option value="in_transit">Em Trânsito</option>
+                        <option value="delivered">Entregue</option>
+                        <option value="cancelled">Cancelado</option>
+                      </select>
+                    ) : (
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusBadge.class}`}>
+                        {statusBadge.label}
+                      </span>
+                    )}
                   </td>
 
                   {/* Delivery Deadline with Alert Indicator */}
-                  <td className="py-3 px-3">
-                    <div className="flex items-center space-x-1.5 font-medium text-editorial-text">
-                      <Calendar className="w-3.5 h-3.5 text-editorial-muted" />
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center space-x-1 font-medium text-editorial-text dark:text-stone-200 text-xs">
+                      <Calendar className="w-3 h-3 text-editorial-muted dark:text-stone-400" />
                       <span>{formatDate(order.expectedDeliveryDate)}</span>
                     </div>
-                    <div className="mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${deadline.badgeClass}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full mr-1 ${deadline.dotClass}`} />
-                        {deadline.label}
+                    <div className="mt-0.5">
+                      <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold border ${deadline.badgeClass}`}>
+                        <span className={`w-1 h-1 rounded-full mr-1 ${deadline.dotClass}`} />
+                        {deadline.shortLabel}
                       </span>
                     </div>
                   </td>
 
                   {/* Volume (Pieces) */}
-                  <td className="py-3 px-3 text-right">
-                    <div className="font-mono font-bold text-editorial-text text-sm">
-                      {order.totalPieces.toLocaleString('pt-BR')} <span className="text-[10px] font-normal text-editorial-muted">un</span>
+                  <td className="py-2.5 px-3 text-right">
+                    <div className="font-mono font-bold text-editorial-text dark:text-stone-200 text-xs sm:text-sm">
+                      {order.totalPieces.toLocaleString('pt-BR')} <span className="text-[9px] font-normal text-editorial-muted">un</span>
                     </div>
-                    <div className="text-[11px] text-editorial-muted">
+                    <div className="text-[10px] text-editorial-muted dark:text-stone-400">
                       {order.items.length} {order.items.length === 1 ? 'modelo' : 'modelos'}
                     </div>
                   </td>
 
                   {/* Total Amount */}
-                  <td className="py-3 px-3 text-right">
-                    <div className="font-mono font-bold text-brand-800 text-sm">
+                  <td className="py-2.5 px-3 text-right">
+                    <div className="font-mono font-bold text-brand-800 dark:text-brand-300 text-xs sm:text-sm">
                       {canViewCosts ? formatCurrency(order.totalAmount) : 'R$ ••••••'}
                     </div>
-                    <div className="text-[10px] text-editorial-muted">
-                      {order.paymentTerms.split('(')[0]}
+                    <div className="text-[9px] text-editorial-muted dark:text-stone-400 truncate">
+                      {order.paymentTerms ? order.paymentTerms.split('(')[0] : 'À vista'}
                     </div>
                   </td>
 
                   {/* Action Buttons */}
-                  <td className="py-3 px-3 text-center">
-                    <div className="flex items-center justify-center space-x-1">
+                  <td className="py-2.5 px-3 text-center">
+                    <div className="flex items-center justify-center space-x-0.5">
                       {/* Edit */}
-                      <button
-                        onClick={() => onEditOrder(order)}
-                        className="p-1.5 rounded-md text-stone-600 hover:text-brand-800 hover:bg-brand-100 transition-colors"
-                        title="Editar pedido na planilha"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
+                      {canEditOrders && (
+                        <button
+                          onClick={() => onEditOrder(order)}
+                          className="p-1 rounded text-stone-500 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
+                          title="Editar pedido"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
 
                       {/* PDF */}
                       <button
                         onClick={() => {
                           exportOrderToPdf(order, storeSettings);
-                          onShowToast(`PDF do pedido ${order.orderNumber} gerado!`, 'success');
+                          onShowToast(`PDF ${order.orderNumber} gerado!`, 'success');
                         }}
-                        className="p-1.5 rounded-md text-stone-600 hover:text-brand-800 hover:bg-brand-100 transition-colors"
-                        title="Baixar Ordem de Compra em PDF"
+                        className="p-1 rounded text-stone-500 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
+                        title="Baixar PDF"
                       >
-                        <FileText className="w-4 h-4 text-brand-600" />
+                        <FileText className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       </button>
 
                       {/* Excel */}
                       <button
                         onClick={() => {
                           exportOrderToExcel(order);
-                          onShowToast(`Excel do pedido ${order.orderNumber} exportado!`, 'success');
+                          onShowToast(`Excel ${order.orderNumber} exportado!`, 'success');
                         }}
-                        className="p-1.5 rounded-md text-stone-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                        title="Exportar para Excel (.xlsx)"
+                        className="p-1 rounded text-stone-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                        title="Exportar Excel"
                       >
-                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       </button>
 
                       {/* WhatsApp */}
                       <button
                         onClick={() => handleShareWhatsApp(order)}
-                        className="p-1.5 rounded-md text-stone-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
-                        title="Enviar resumo por WhatsApp"
+                        className="p-1 rounded text-stone-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                        title="Enviar por WhatsApp"
                       >
-                        <MessageCircle className="w-4 h-4 text-emerald-600" />
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       </button>
 
                       {/* Duplicate */}
-                      <button
-                        onClick={() => onDuplicateOrder(order)}
-                        className="p-1.5 rounded-md text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
-                        title="Duplicar pedido"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
+                      {canEditOrders && (
+                        <button
+                          onClick={() => onDuplicateOrder(order)}
+                          className="p-1 rounded text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                          title="Duplicar pedido"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      )}
 
                       {/* Delete */}
-                      <button
-                        onClick={() => {
-                          if (confirm(`Tem certeza que deseja excluir o pedido ${order.orderNumber}?`)) {
-                            onDeleteOrder(order.id);
-                          }
-                        }}
-                        className="p-1.5 rounded-md text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                        title="Excluir pedido"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canDeleteOrders && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Excluir o pedido ${order.orderNumber}?`)) {
+                              onDeleteOrder(order.id);
+                            }
+                          }}
+                          className="p-1 rounded text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          title="Excluir pedido"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
 
                 {/* Expanded Item Breakdown Drawer */}
                 {isExpanded && (
-                  <tr className="bg-brand-50/20">
-                    <td colSpan={8} className="p-4 sm:p-5">
-                      <div className="bg-white rounded-lg border border-brand-200 shadow-xs p-4 space-y-3">
-                        <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-brand-800 flex items-center">
-                            <Sparkles className="w-3.5 h-3.5 mr-1 text-brand-600" />
-                            Grade de Peças & Itens ({order.items.length} referências)
+                  <tr className="bg-brand-50/20 dark:bg-stone-950/40">
+                    <td colSpan={8} className="p-3 sm:p-4">
+                      <div className="bg-white dark:bg-stone-900 rounded-lg border border-brand-200 dark:border-stone-800 shadow-xs p-3 space-y-2.5">
+                        <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-1.5">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-800 dark:text-brand-300 flex items-center">
+                            <Sparkles className="w-3 h-3 mr-1 text-brand-600 dark:text-brand-400" />
+                            Grade do Pedido ({order.items.length} itens)
                           </span>
-                          <span className="text-xs text-editorial-muted">
-                            Emissão: {formatDate(order.issueDate)} | Transportadora: {order.shippingCarrier || 'FOB'}
+                          <span className="text-[10px] text-editorial-muted dark:text-stone-400">
+                            Emissão: {formatDate(order.issueDate)} | Frete: {order.shippingCarrier || 'FOB'}
                           </span>
                         </div>
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs text-left">
                             <thead>
-                              <tr className="text-[10px] uppercase font-semibold text-editorial-muted border-b border-stone-200 pb-1">
-                                <th className="py-1.5 px-2">REF/SKU</th>
-                                <th className="py-1.5 px-2">Descrição</th>
-                                <th className="py-1.5 px-2">Categoria</th>
-                                <th className="py-1.5 px-2">Grade</th>
-                                <th className="py-1.5 px-2">Cor</th>
-                                <th className="py-1.5 px-2 text-right">Qtd</th>
-                                <th className="py-1.5 px-2 text-right">Custo Unit.</th>
-                                <th className="py-1.5 px-2 text-right">Subtotal</th>
+                              <tr className="text-[9px] uppercase font-semibold text-editorial-muted dark:text-stone-400 border-b border-stone-200 dark:border-stone-800 pb-1">
+                                <th className="py-1 px-2">REF/SKU</th>
+                                <th className="py-1 px-2">Descrição</th>
+                                <th className="py-1 px-2">Categoria</th>
+                                <th className="py-1 px-2">Tamanho</th>
+                                <th className="py-1 px-2">Cor</th>
+                                <th className="py-1 px-2 text-right">Qtd</th>
+                                <th className="py-1 px-2 text-right">Custo</th>
+                                <th className="py-1 px-2 text-right">Subtotal</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-stone-100">
+                            <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                               {order.items.map((item, idx) => (
-                                <tr key={idx} className="hover:bg-stone-50">
-                                  <td className="py-1.5 px-2 font-mono font-bold text-brand-900">{item.sku}</td>
-                                  <td className="py-1.5 px-2 font-medium text-editorial-text">{item.description}</td>
-                                  <td className="py-1.5 px-2 text-stone-600">{item.category}</td>
-                                  <td className="py-1.5 px-2 text-stone-700">{item.size}</td>
+                                <tr key={idx} className="hover:bg-stone-50 dark:hover:bg-stone-800/30">
+                                  <td className="py-1.5 px-2 font-mono font-bold text-brand-900 dark:text-brand-300">{item.sku}</td>
+                                  <td className="py-1.5 px-2 font-medium text-editorial-text dark:text-stone-200">{item.description}</td>
+                                  <td className="py-1.5 px-2 text-stone-600 dark:text-stone-400">{item.category}</td>
+                                  <td className="py-1.5 px-2 text-stone-700 dark:text-stone-300 font-mono">{item.size}</td>
                                   <td className="py-1.5 px-2 flex items-center space-x-1.5">
                                     {item.colorHex && (
                                       <span
-                                        className="w-3 h-3 rounded-full border border-stone-300 flex-shrink-0"
+                                        className="w-2.5 h-2.5 rounded-full border border-stone-300 dark:border-stone-600 flex-shrink-0"
                                         style={{ backgroundColor: item.colorHex }}
                                       />
                                     )}
                                     <span>{item.color}</span>
                                   </td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold">{item.quantity}</td>
-                                  <td className="py-1.5 px-2 text-right font-mono">{formatCurrency(item.unitCost)}</td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-stone-900">{formatCurrency(item.subtotal)}</td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-stone-900 dark:text-stone-100">{item.quantity}</td>
+                                  <td className="py-1.5 px-2 text-right font-mono text-stone-600 dark:text-stone-400">
+                                    {canViewCosts ? formatCurrency(item.unitCost) : '••••'}
+                                  </td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-stone-900 dark:text-stone-100">
+                                    {canViewCosts ? formatCurrency(item.subtotal) : '••••'}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -355,8 +362,8 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                         </div>
 
                         {order.notes && (
-                          <div className="text-[11px] text-editorial-muted bg-stone-50 p-2 rounded border border-stone-200">
-                            <strong>Instruções de confecção:</strong> {order.notes}
+                          <div className="text-[10px] text-editorial-muted dark:text-stone-400 bg-stone-50 dark:bg-stone-800/60 p-1.5 rounded border border-stone-200 dark:border-stone-700">
+                            <strong>Obs:</strong> {order.notes}
                           </div>
                         )}
                       </div>
@@ -381,29 +388,31 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
     }, {});
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {Object.entries(groupedMap).map(([supplierName, supOrders]) => {
           const totalPieces = supOrders.reduce((sum, o) => sum + o.totalPieces, 0);
           const totalAmount = supOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
           return (
-            <div key={supplierName} className="bg-white rounded-xl border border-brand-200 shadow-soft overflow-hidden">
-              <div className="p-4 bg-brand-50/60 border-b border-brand-200 flex flex-wrap items-center justify-between gap-2">
+            <div key={supplierName} className="bg-white dark:bg-stone-900 rounded-xl border border-brand-200 dark:border-stone-800 shadow-soft overflow-hidden">
+              <div className="p-3.5 bg-brand-50/60 dark:bg-stone-800/80 border-b border-brand-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-2">
-                  <Building2 className="w-5 h-5 text-brand-700" />
+                  <Building2 className="w-4 h-4 text-brand-700 dark:text-brand-400" />
                   <div>
-                    <h3 className="font-serif font-bold text-base text-editorial-text">{supplierName}</h3>
-                    <span className="text-xs text-editorial-muted">{supOrders.length} {supOrders.length === 1 ? 'pedido' : 'pedidos'}</span>
+                    <h3 className="font-serif font-bold text-sm text-editorial-text dark:text-stone-100">{supplierName}</h3>
+                    <span className="text-[10px] text-editorial-muted dark:text-stone-400">{supOrders.length} {supOrders.length === 1 ? 'pedido' : 'pedidos'}</span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 text-xs font-medium">
+                <div className="flex items-center space-x-3 text-xs font-medium">
                   <div>
-                    <span className="text-editorial-muted">Peças: </span>
-                    <strong className="font-mono text-editorial-text">{totalPieces} un</strong>
+                    <span className="text-editorial-muted dark:text-stone-400">Peças: </span>
+                    <strong className="font-mono text-editorial-text dark:text-stone-200">{totalPieces} un</strong>
                   </div>
                   <div>
-                    <span className="text-editorial-muted">Total: </span>
-                    <strong className="font-mono text-brand-800 text-sm">{formatCurrency(totalAmount)}</strong>
+                    <span className="text-editorial-muted dark:text-stone-400">Total: </span>
+                    <strong className="font-mono text-brand-800 dark:text-brand-300 text-xs sm:text-sm">
+                      {canViewCosts ? formatCurrency(totalAmount) : 'R$ •••••'}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -417,7 +426,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
   // Standard Table View
   return (
-    <div className="bg-white rounded-xl border border-brand-200 shadow-soft overflow-hidden">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-brand-200 dark:border-stone-800 shadow-soft overflow-hidden">
       {renderOrdersTable(orders)}
     </div>
   );

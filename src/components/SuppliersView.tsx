@@ -3,10 +3,8 @@ import {
   Building2, 
   Plus, 
   Phone, 
-  Mail, 
   MapPin, 
   Clock, 
-  CreditCard, 
   Edit3, 
   Trash2, 
   PlusCircle,
@@ -15,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Supplier, PurchaseOrder } from '../types';
 import { formatCNPJ, formatPhone, formatCurrency } from '../utils/calculations';
+import { useCustomization } from '../context/CustomizationContext';
 
 interface SuppliersViewProps {
   suppliers: Supplier[];
@@ -34,52 +33,56 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   onNewOrderForSupplier,
 }) => {
   const [search, setSearch] = useState('');
+  const { hasPermission } = useCustomization();
+  const canManageSuppliers = hasPermission('suppliers_manage');
 
   const filteredSuppliers = suppliers.filter(
     s =>
-      s.tradeName.toLowerCase().includes(search.toLowerCase()) ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.categorySpecialty.toLowerCase().includes(search.toLowerCase()) ||
-      s.city.toLowerCase().includes(search.toLowerCase())
+      (s.tradeName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.corporateName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.category || '').toLowerCase().includes(search.toLowerCase()) ||
+      (s.city || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header & Search */}
-      <div className="bg-white rounded-xl p-5 border border-brand-200 shadow-soft flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-stone-900 rounded-xl p-4 sm:p-5 border border-brand-200 dark:border-stone-800 shadow-soft flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-bold text-editorial-text">
-            Fornecedores & Oficinas de Confecção
+          <h1 className="text-xl font-serif font-bold text-editorial-text dark:text-stone-100">
+            Fornecedores & Facções
           </h1>
-          <p className="text-xs text-editorial-muted">
-            Gerencie o cadastro de parceiros fabris, prazos médios de entrega e condições de pagamento.
+          <p className="text-xs text-editorial-muted dark:text-stone-400">
+            Cadastro de confecções parceiras, prazos médios e contatos de compras.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-editorial-muted absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative flex-1 sm:w-60">
+            <Search className="w-4 h-4 text-editorial-muted dark:text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Buscar fornecedor..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="w-full pl-9 pr-3 py-1.5 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
-          <button
-            onClick={onNewSupplier}
-            className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold flex items-center space-x-1.5 shadow-sm transition-all flex-shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Novo Fornecedor</span>
-          </button>
+          {canManageSuppliers && (
+            <button
+              onClick={onNewSupplier}
+              className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center space-x-1 shadow-xs transition-all flex-shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Novo</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Grid of Supplier Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {filteredSuppliers.map(sup => {
           const supOrders = orders.filter(o => o.supplierId === sup.id);
           const totalSpent = supOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -88,112 +91,106 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
           return (
             <div
               key={sup.id}
-              className="bg-white rounded-xl p-5 border border-brand-200 shadow-soft hover:shadow-card transition-all flex flex-col justify-between space-y-4"
+              className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-brand-200 dark:border-stone-800 shadow-soft hover:shadow-card transition-all flex flex-col justify-between space-y-3"
             >
               <div>
                 {/* Header: Name & Rating */}
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-serif font-bold text-base text-editorial-text">
-                      {sup.tradeName}
+                  <div className="truncate">
+                    <h3 className="font-serif font-bold text-sm text-editorial-text dark:text-stone-100 truncate">
+                      {sup.tradeName || sup.corporateName}
                     </h3>
-                    <p className="text-xs text-editorial-muted">{sup.name}</p>
-                    <span className="inline-block mt-1 font-mono text-[11px] text-editorial-subtle">
+                    <p className="text-[11px] font-mono text-editorial-muted dark:text-stone-400 mt-0.5 truncate">
                       CNPJ: {formatCNPJ(sup.cnpj)}
-                    </span>
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-amber-800 text-xs font-bold">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                    <span>{sup.rating.toFixed(1)}</span>
-                  </div>
+                  {sup.rating !== undefined && (
+                    <div className="flex items-center space-x-1 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex-shrink-0">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      <span>{sup.rating.toFixed(1)}</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Specialty Pill */}
-                <div className="mt-3">
-                  <span className="inline-block px-2.5 py-1 rounded-md text-[11px] font-medium bg-brand-50 text-brand-900 border border-brand-200">
-                    {sup.categorySpecialty}
+                {/* Category & Lead Time Chips */}
+                <div className="flex items-center space-x-1.5 mt-2.5">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-300 border border-brand-200 dark:border-brand-800/40">
+                    {sup.category || 'Confecção'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 flex items-center">
+                    <Clock className="w-2.5 h-2.5 mr-1" />
+                    {sup.averageLeadDays || 15}d prazo
                   </span>
                 </div>
 
-                {/* Details */}
-                <div className="mt-4 space-y-2 text-xs text-editorial-muted">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
-                    <span>{sup.city} - {sup.state}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                    <a
-                      href={`https://wa.me/55${sup.phone.replace(/\D/g, '')}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-700 hover:underline font-medium"
-                    >
-                      {formatPhone(sup.phone)} ({sup.contactName})
-                    </a>
-                  </div>
-
-                  {sup.email && (
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
-                      <span className="truncate">{sup.email}</span>
+                {/* Concise Details */}
+                <div className="mt-3 space-y-1.5 text-xs text-editorial-muted dark:text-stone-400">
+                  {(sup.city || sup.state) && (
+                    <div className="flex items-center space-x-1.5 text-[11px]">
+                      <MapPin className="w-3 h-3 text-stone-400 flex-shrink-0" />
+                      <span>{sup.city}{sup.state ? ` - ${sup.state}` : ''}</span>
                     </div>
                   )}
 
-                  <div className="flex items-center space-x-2">
-                    <CreditCard className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
-                    <span>{sup.defaultPaymentTerms}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-3.5 h-3.5 text-brand-600 flex-shrink-0" />
-                    <span>Lead time médio: <strong>{sup.averageLeadDays} dias</strong></span>
-                  </div>
+                  {sup.phone && (
+                    <div className="flex items-center space-x-1.5 text-[11px]">
+                      <Phone className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                      <a
+                        href={`https://wa.me/55${sup.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-emerald-700 dark:text-emerald-400 hover:underline font-medium truncate"
+                      >
+                        {formatPhone(sup.phone)} ({sup.contactName || 'Comercial'})
+                      </a>
+                    </div>
+                  )}
                 </div>
 
-                {/* Metrics Summary */}
-                <div className="mt-4 pt-3 border-t border-stone-100 grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="bg-stone-50 p-2 rounded">
-                    <span className="text-[10px] text-editorial-muted block uppercase">Pedidos / Peças</span>
-                    <strong className="font-mono text-editorial-text">{supOrders.length} ped ({totalPieces} un)</strong>
-                  </div>
-                  <div className="bg-brand-50/50 p-2 rounded">
-                    <span className="text-[10px] text-brand-800 block uppercase">Volume Comprado</span>
-                    <strong className="font-mono text-brand-900">{formatCurrency(totalSpent)}</strong>
-                  </div>
+                {/* Metrics Pill */}
+                <div className="mt-3 pt-2.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-editorial-muted dark:text-stone-400">
+                    {supOrders.length} ped ({totalPieces} pçs)
+                  </span>
+                  <span className="font-mono font-bold text-brand-800 dark:text-brand-300 text-xs">
+                    {formatCurrency(totalSpent)}
+                  </span>
                 </div>
               </div>
 
               {/* Bottom Actions */}
-              <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
+              <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
                 <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => onEditSupplier(sup)}
-                    className="p-1.5 rounded-lg text-stone-500 hover:text-brand-800 hover:bg-brand-50 transition-colors"
-                    title="Editar fornecedor"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Deseja remover o fornecedor ${sup.tradeName}?`)) {
-                        onDeleteSupplier(sup.id);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    title="Excluir fornecedor"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canManageSuppliers && (
+                    <>
+                      <button
+                        onClick={() => onEditSupplier(sup)}
+                        className="p-1 rounded text-stone-400 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                        title="Editar"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remover fornecedor ${sup.tradeName}?`)) {
+                            onDeleteSupplier(sup.id);
+                          }
+                        }}
+                        className="p-1 rounded text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <button
                   onClick={() => onNewOrderForSupplier(sup)}
-                  className="px-3 py-1.5 rounded-lg bg-brand-100 hover:bg-brand-200 text-brand-900 text-xs font-semibold flex items-center space-x-1 transition-colors"
+                  className="px-2.5 py-1 rounded bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 text-brand-900 dark:text-brand-300 text-[11px] font-semibold flex items-center space-x-1 border border-brand-200 dark:border-brand-800/40 transition-colors"
                 >
-                  <PlusCircle className="w-3.5 h-3.5 text-brand-700" />
-                  <span>Emitir Pedido</span>
+                  <PlusCircle className="w-3 h-3 text-brand-700 dark:text-brand-400" />
+                  <span>Novo Pedido</span>
                 </button>
               </div>
             </div>
