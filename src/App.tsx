@@ -9,6 +9,7 @@ import { SuppliersView } from './components/SuppliersView';
 import { SupplierModal } from './components/SupplierModal';
 import { OrderPreviewModal } from './components/OrderPreviewModal';
 import { SettingsView } from './components/SettingsView';
+import { LoginView } from './components/LoginView';
 import { ToastContainer, ToastData } from './components/Toast';
 import { 
   PurchaseOrder, 
@@ -33,7 +34,12 @@ import {
 } from './services/supabaseClient';
 
 function AppContent() {
-  const { layoutSettings } = useCustomization();
+  const { layoutSettings, isAuthenticated } = useCustomization();
+
+  // If user is not authenticated, show luxury login screen
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
 
   // 1. Storage-backed state for Orders
   const [orders, setOrders] = useState<PurchaseOrder[]>(() => {

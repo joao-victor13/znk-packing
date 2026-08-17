@@ -15,7 +15,10 @@ import {
   Moon,
   Monitor,
   ShieldCheck,
-  CheckCircle2
+  Lock,
+  Eye,
+  EyeOff,
+  KeyRound
 } from 'lucide-react';
 import { useCustomization } from '../context/CustomizationContext';
 import { 
@@ -53,6 +56,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
     layoutSettings,
     updateLayoutSettings,
     hasPermission,
+    isAdmin,
     resetAllCustomizations,
   } = useCustomization();
 
@@ -73,26 +77,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
 
   // User modal/form state
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [showUserPassword, setShowUserPassword] = useState(false);
   const [newUserForm, setNewUserForm] = useState<{
     name: string;
     email: string;
+    password: string;
     role: UserRole;
     roleTitle: string;
     themePreference: ThemeMode;
   }>({
     name: '',
     email: '',
+    password: '',
     role: 'buyer_stylist',
     roleTitle: 'Compradora de Moda',
     themePreference: 'system',
   });
 
-  const canManageSettings = hasPermission('settings_manage');
+  const canManageSettings = isAdmin;
   const canManageCategories = hasPermission('categories_manage');
 
   // Save Store Settings
   const handleSaveStoreSettings = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) {
+      onShowToast('Apenas administradores podem alterar os dados da loja.', 'error');
+      return;
+    }
     updateStoreSettings(storeForm);
     onShowToast('Dados da Loja atualizados com sucesso!', 'success');
   };
@@ -146,10 +157,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
     onShowToast(`Categoria "${newCatName}" criada!`, 'success');
   };
 
-  // Add User Handler
+  // Add User Handler (Admin only)
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserForm.name.trim() || !newUserForm.email.trim()) return;
+    if (!isAdmin) {
+      onShowToast('Apenas administradores podem cadastrar novos usuários.', 'error');
+      return;
+    }
+    if (!newUserForm.name.trim() || !newUserForm.email.trim() || !newUserForm.password.trim()) {
+      onShowToast('Preencha nome, email e senha do colaborador.', 'error');
+      return;
+    }
 
     const avatars = ['bg-brand-600', 'bg-rose-500', 'bg-emerald-600', 'bg-blue-600', 'bg-purple-600'];
     const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
@@ -157,6 +175,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
     addUser({
       name: newUserForm.name.trim(),
       email: newUserForm.email.trim(),
+      password: newUserForm.password.trim(),
       role: newUserForm.role,
       roleTitle: newUserForm.roleTitle.trim() || 'Colaborador',
       avatarBg: randomAvatar,
@@ -167,24 +186,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
     setNewUserForm({
       name: '',
       email: '',
+      password: '',
       role: 'buyer_stylist',
       roleTitle: 'Compradora de Moda',
       themePreference: 'system',
     });
     setIsAddingUser(false);
-    onShowToast('Novo usuário cadastrado!', 'success');
-  };
-
-  const permissionLabels: Record<PermissionKey, string> = {
-    orders_create: 'Criar Pedidos',
-    orders_edit: 'Editar Pedidos',
-    orders_delete: 'Excluir Pedidos',
-    orders_approve: 'Aprovar / Produção',
-    orders_view_costs: 'Visualizar Custos & Preços (R$)',
-    suppliers_manage: 'Gerenciar Fornecedores',
-    categories_manage: 'Gerenciar Categorias',
-    settings_manage: 'Configurações do Sistema',
-    export_reports: 'Exportar PDF / Excel',
+    onShowToast('Novo colaborador cadastrado com sucesso!', 'success');
   };
 
   return (
@@ -197,28 +205,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               <SlidersHorizontal className="w-4 h-4" />
             </span>
             <h1 className="text-xl font-serif font-bold text-editorial-text dark:text-stone-100">
-              Configurações do Sistema
+              Painel de Configurações
             </h1>
           </div>
           <p className="text-xs text-editorial-muted dark:text-stone-400 mt-1">
-            Personalize a identidade da marca, tema visual, categorias e permissões de acesso.
+            Logado como <strong className="text-editorial-text dark:text-stone-200">{currentUser.name}</strong> ({currentUser.roleTitle}).
+            {isAdmin && <span className="ml-1 text-brand-700 dark:text-brand-400 font-semibold">• Acesso Administrador</span>}
           </p>
         </div>
 
-        {/* Global Reset */}
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm('Deseja restaurar todas as configurações para os padrões originais?')) {
-              resetAllCustomizations();
-              onShowToast('Configurações restauradas.', 'info');
-            }
-          }}
-          className="px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-medium flex items-center space-x-1.5 transition-colors"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Restaurar Padrões</span>
-        </button>
+        {/* Global Reset (Admin Only) */}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Deseja restaurar todas as configurações para os padrões originais?')) {
+                resetAllCustomizations();
+                onShowToast('Configurações restauradas.', 'info');
+              }
+            }}
+            className="px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-medium flex items-center space-x-1.5 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Restaurar Padrões</span>
+          </button>
+        )}
       </div>
 
       {/* Settings Navigation Tabs */}
@@ -269,6 +280,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         >
           <Users className="w-3.5 h-3.5" />
           <span>Usuários ({users.length})</span>
+          {!isAdmin && <Lock className="w-3 h-3 ml-1 text-stone-400" />}
         </button>
 
         <button
@@ -280,7 +292,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
           }`}
         >
           <LayoutGrid className="w-3.5 h-3.5" />
-          <span>Layout da Tabela</span>
+          <span>Layout & Visualização</span>
         </button>
       </div>
 
@@ -290,13 +302,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
           <div className="border-b border-stone-100 dark:border-stone-800 pb-3 flex items-center justify-between">
             <div>
               <h2 className="text-base font-serif font-bold text-editorial-text dark:text-stone-100">
-                Dados da Loja & Documentação
+                Identidade da Empresa & Documentação
               </h2>
               <p className="text-xs text-editorial-muted dark:text-stone-400">
-                Informações impressas nos cabeçalhos de ordens de compra em PDF e Excel.
+                Informações impressas em todas as Ordens de Compra em PDF e planilhas Excel.
               </p>
             </div>
-            {canManageSettings && (
+            {isAdmin ? (
               <button
                 type="submit"
                 className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center space-x-1.5 shadow-xs transition-all"
@@ -304,6 +316,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                 <Save className="w-3.5 h-3.5" />
                 <span>Salvar</span>
               </button>
+            ) : (
+              <span className="text-[11px] text-stone-400 flex items-center">
+                <Lock className="w-3 h-3 mr-1" />
+                Apenas Admin pode editar
+              </span>
             )}
           </div>
 
@@ -315,10 +332,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               <input
                 type="text"
                 required
+                disabled={!isAdmin}
                 value={storeForm.storeName}
                 onChange={e => setStoreForm({ ...storeForm, storeName: e.target.value })}
                 placeholder="ZNK Packing"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs font-serif font-bold text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs font-serif font-bold text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
@@ -328,10 +346,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.tagline}
                 onChange={e => setStoreForm({ ...storeForm, tagline: e.target.value })}
                 placeholder="Gestão de Pedidos & Confecção"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
@@ -341,10 +360,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.cnpj}
                 onChange={e => setStoreForm({ ...storeForm, cnpj: e.target.value })}
                 placeholder="42.190.876/0001-33"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs font-mono text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs font-mono text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
@@ -354,10 +374,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.legalName}
                 onChange={e => setStoreForm({ ...storeForm, legalName: e.target.value })}
                 placeholder="ZNK Packing Comércio & Confecção Ltda"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
@@ -367,67 +388,69 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               </label>
               <input
                 type="email"
+                disabled={!isAdmin}
                 value={storeForm.email}
                 onChange={e => setStoreForm({ ...storeForm, email: e.target.value })}
                 placeholder="compras@znkpacking.com.br"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
             <div className="space-y-1">
               <label className="font-semibold text-editorial-text dark:text-stone-200">
-                WhatsApp / Telefone
+                WhatsApp Comercial
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.phone}
                 onChange={e => setStoreForm({ ...storeForm, phone: e.target.value })}
                 placeholder="(11) 97654-3210"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
             <div className="space-y-1 sm:col-span-2">
               <label className="font-semibold text-editorial-text dark:text-stone-200">
-                Endereço
+                Endereço da Matriz
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.address}
                 onChange={e => setStoreForm({ ...storeForm, address: e.target.value })}
                 placeholder="Rua Oscar Freire, 1420 - Jardins"
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
 
             <div className="space-y-1 sm:col-span-3">
               <label className="font-semibold text-editorial-text dark:text-stone-200">
-                Nota de Rodapé (PDFs)
+                Nota de Rodapé Padrão (PDFs)
               </label>
               <input
                 type="text"
+                disabled={!isAdmin}
                 value={storeForm.footerNote}
                 onChange={e => setStoreForm({ ...storeForm, footerNote: e.target.value })}
                 placeholder="Ordem de Compra oficial ZNK Packing - Sujeita ao controle de qualidade."
-                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-75"
               />
             </div>
           </div>
         </form>
       )}
 
-      {/* TAB 2: APARÊNCIA & TEMA (CLARO / ESCURO / SISTEMA) */}
+      {/* TAB 2: APARÊNCIA & TEMA */}
       {activeTab === 'theme' && (
         <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-brand-200 dark:border-stone-800 shadow-soft space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-3">
-            <div>
-              <h2 className="text-base font-serif font-bold text-editorial-text dark:text-stone-100">
-                Aparência Visual
-              </h2>
-              <p className="text-xs text-editorial-muted dark:text-stone-400">
-                Escolha o tema de exibição. A preferência é salva individualmente para o usuário logado (<span className="font-semibold text-brand-700 dark:text-brand-400">{currentUser.name}</span>).
-              </p>
-            </div>
+          <div className="border-b border-stone-100 dark:border-stone-800 pb-3">
+            <h2 className="text-base font-serif font-bold text-editorial-text dark:text-stone-100">
+              Aparência Visual
+            </h2>
+            <p className="text-xs text-editorial-muted dark:text-stone-400">
+              Configuração personalizada para o seu usuário (<span className="font-semibold text-brand-700 dark:text-brand-400">{currentUser.name}</span>).
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -435,7 +458,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             <div
               onClick={() => {
                 setThemeMode('light');
-                onShowToast('Tema Claro ativado para seu usuário!', 'success');
+                onShowToast('Tema Claro ativado!', 'success');
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'light'
@@ -465,7 +488,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             <div
               onClick={() => {
                 setThemeMode('dark');
-                onShowToast('Modo Escuro ativado para seu usuário!', 'success');
+                onShowToast('Modo Escuro ativado!', 'success');
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'dark'
@@ -495,7 +518,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             <div
               onClick={() => {
                 setThemeMode('system');
-                onShowToast('Tema sincronizado com o Sistema Operacional!', 'info');
+                onShowToast('Tema sincronizado com o dispositivo!', 'info');
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'system'
@@ -517,7 +540,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                 Automático / Sistema
               </h3>
               <p className="text-[11px] text-editorial-muted dark:text-stone-400 mt-1">
-                Acompanha automaticamente as preferências do seu dispositivo.
+                Acompanha automaticamente as preferências do seu sistema.
               </p>
             </div>
           </div>
@@ -638,20 +661,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </div>
       )}
 
-      {/* TAB 4: USUÁRIOS & PERMISSÕES */}
+      {/* TAB 4: USUÁRIOS & PERMISSÕES (ADMIN PROTECTED) */}
       {activeTab === 'users' && (
         <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-brand-200 dark:border-stone-800 shadow-soft space-y-4">
           <div className="border-b border-stone-100 dark:border-stone-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-serif font-bold text-editorial-text dark:text-stone-100">
-                Usuários & Perfis de Acesso
-              </h2>
-              <p className="text-xs text-editorial-muted dark:text-stone-400">
-                Alterne de usuário ativo ou gerencie os níveis de permissão da equipe.
+              <div className="flex items-center space-x-2">
+                <h2 className="text-base font-serif font-bold text-editorial-text dark:text-stone-100">
+                  Usuários & Acessos
+                </h2>
+                {isAdmin ? (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800 flex items-center">
+                    <ShieldCheck className="w-3 h-3 mr-1" />
+                    Gerenciamento Admin
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-[10px] font-medium flex items-center">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Apenas Visualização
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-editorial-muted dark:text-stone-400 mt-0.5">
+                {isAdmin
+                  ? 'Cadastre novos colaboradores com senhas e níveis de permissão exclusivos.'
+                  : 'Apenas usuários com perfil Administrador podem cadastrar e gerenciar contas.'}
               </p>
             </div>
 
-            {canManageSettings && (
+            {isAdmin && (
               <button
                 type="button"
                 onClick={() => setIsAddingUser(true)}
@@ -663,60 +701,135 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             )}
           </div>
 
-          {/* Add User Modal */}
-          {isAddingUser && (
-            <form onSubmit={handleAddUser} className="p-3 bg-brand-50/60 dark:bg-stone-800 rounded-lg border border-brand-200 dark:border-stone-700 space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                <input
-                  type="text"
-                  required
-                  placeholder="Nome do Usuário"
-                  value={newUserForm.name}
-                  onChange={e => setNewUserForm({ ...newUserForm, name: e.target.value })}
-                  className="px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
-                />
-                <input
-                  type="email"
-                  required
-                  placeholder="Email"
-                  value={newUserForm.email}
-                  onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                  className="px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
-                />
-                <select
-                  value={newUserForm.role}
-                  onChange={e => setNewUserForm({ ...newUserForm, role: e.target.value as UserRole })}
-                  className="px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
-                >
-                  <option value="admin">Administrador (Total)</option>
-                  <option value="buyer_stylist">Comprador / Estilista</option>
-                  <option value="production_manager">Gerente de PCP</option>
-                  <option value="financial_auditor">Financeiro</option>
-                  <option value="sales_assistant">Assistente</option>
-                </select>
-                <select
-                  value={newUserForm.themePreference}
-                  onChange={e => setNewUserForm({ ...newUserForm, themePreference: e.target.value as ThemeMode })}
-                  className="px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
-                >
-                  <option value="system">Tema: Sistema</option>
-                  <option value="light">Tema: Claro</option>
-                  <option value="dark">Tema: Escuro</option>
-                </select>
+          {/* Non-admin restricted notice banner */}
+          {!isAdmin && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-300 flex items-center space-x-2">
+              <Lock className="w-4 h-4 text-amber-700 dark:text-amber-400 flex-shrink-0" />
+              <span>
+                Seu perfil atual é <strong>{currentUser.roleTitle}</strong>. Para criar novos usuários, alterar senhas ou permissões, faça login com uma conta <strong>Admin</strong>.
+              </span>
+            </div>
+          )}
+
+          {/* Add User Modal (Admin only) */}
+          {isAdmin && isAddingUser && (
+            <form onSubmit={handleAddUser} className="p-4 bg-brand-50/60 dark:bg-stone-800 rounded-xl border border-brand-200 dark:border-stone-700 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-brand-900 dark:text-brand-300 flex items-center space-x-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                <span>Cadastrar Novo Colaborador</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Nome Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Beatriz Lima"
+                    value={newUserForm.name}
+                    onChange={e => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Email de Acesso *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="beatriz@znkpacking.com.br"
+                    value={newUserForm.email}
+                    onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Senha de Acesso *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showUserPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Senha do usuário"
+                      value={newUserForm.password}
+                      onChange={e => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                      className="w-full pl-3 pr-8 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowUserPassword(!showUserPassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      {showUserPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Nível de Acesso (Cargo)
+                  </label>
+                  <select
+                    value={newUserForm.role}
+                    onChange={e => setNewUserForm({ ...newUserForm, role: e.target.value as UserRole })}
+                    className="w-full px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
+                  >
+                    <option value="admin">Administrador Geral (Acesso Total)</option>
+                    <option value="buyer_stylist">Comprador / Estilista</option>
+                    <option value="production_manager">Gerente de PCP / Produção</option>
+                    <option value="financial_auditor">Financeiro & Custos</option>
+                    <option value="sales_assistant">Assistente</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Título de Exibição
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Estilista Pleno"
+                    value={newUserForm.roleTitle}
+                    onChange={e => setNewUserForm({ ...newUserForm, roleTitle: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Tema Inicial
+                  </label>
+                  <select
+                    value={newUserForm.themePreference}
+                    onChange={e => setNewUserForm({ ...newUserForm, themePreference: e.target.value as ThemeMode })}
+                    className="w-full px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
+                  >
+                    <option value="system">Sincronizar com Sistema</option>
+                    <option value="light">Modo Claro</option>
+                    <option value="dark">Modo Escuro</option>
+                  </select>
+                </div>
               </div>
-              <div className="flex justify-end space-x-2 pt-1">
+
+              <div className="flex justify-end space-x-2 pt-2 border-t border-brand-200 dark:border-stone-700">
                 <button
                   type="button"
                   onClick={() => setIsAddingUser(false)}
-                  className="px-2.5 py-1 rounded border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 text-xs"
+                  className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 text-xs font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1 rounded bg-brand-600 text-white text-xs font-semibold"
+                  className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-xs"
                 >
-                  Cadastrar
+                  Salvar Usuário
                 </button>
               </div>
             </form>
@@ -726,17 +839,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {users.map(u => {
               const isCurrent = currentUser.id === u.id;
+              const isUserAdmin = u.role === 'admin';
+
               return (
                 <div
                   key={u.id}
                   className={`p-3.5 rounded-xl border transition-all flex items-center justify-between ${
                     isCurrent
-                      ? 'border-brand-600 bg-brand-50/40 dark:bg-brand-950/20 shadow-xs'
+                      ? 'border-brand-600 bg-brand-50/40 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-500'
                       : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900'
                   }`}
                 >
                   <div className="flex items-center space-x-3 truncate">
-                    <div className={`w-9 h-9 rounded-full ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0`}>
+                    <div className={`w-9 h-9 rounded-full ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs flex-shrink-0 shadow-2xs`}>
                       {u.name.charAt(0)}
                     </div>
                     <div className="truncate">
@@ -744,39 +859,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                         <span className="text-xs font-bold text-editorial-text dark:text-stone-100 truncate">
                           {u.name}
                         </span>
+                        {isUserAdmin && (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-[9px] font-bold border border-amber-300 dark:border-amber-800">
+                            Admin
+                          </span>
+                        )}
                         {isCurrent && (
                           <span className="px-1.5 py-0.2 rounded bg-brand-600 text-white text-[9px] font-bold">
-                            Ativo
+                            Você
                           </span>
                         )}
                       </div>
                       <p className="text-[11px] text-editorial-muted dark:text-stone-400 truncate">
-                        {u.roleTitle} • {u.themePreference === 'dark' ? 'Tema Escuro' : u.themePreference === 'light' ? 'Tema Claro' : 'Tema Sistema'}
+                        {u.roleTitle} • {u.email}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-1.5 flex-shrink-0">
-                    {!isCurrent && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrentUser(u);
-                          onShowToast(`Perfil alterado para ${u.name}!`, 'info');
-                        }}
-                        className="px-2.5 py-1 rounded bg-stone-100 dark:bg-stone-800 hover:bg-brand-100 text-stone-700 dark:text-stone-300 text-xs font-medium"
-                      >
-                        Alternar
-                      </button>
-                    )}
-                    {canManageSettings && users.length > 1 && (
+                    {/* Admin Delete Action */}
+                    {isAdmin && users.length > 1 && !isCurrent && (
                       <button
                         onClick={() => {
-                          deleteUser(u.id);
-                          onShowToast(`Usuário removido.`, 'info');
+                          if (confirm(`Remover o acesso de ${u.name}?`)) {
+                            deleteUser(u.id);
+                            onShowToast(`Usuário ${u.name} removido.`, 'info');
+                          }
                         }}
-                        className="p-1 text-stone-400 hover:text-rose-600"
-                        title="Excluir"
+                        className="p-1.5 rounded text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                        title="Excluir Usuário"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -789,7 +900,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </div>
       )}
 
-      {/* TAB 5: LAYOUT & PLANILHA */}
+      {/* TAB 5: LAYOUT & VISUALIZAÇÃO */}
       {activeTab === 'layout' && (
         <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-brand-200 dark:border-stone-800 shadow-soft space-y-4">
           <div>

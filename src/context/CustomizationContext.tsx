@@ -40,10 +40,16 @@ interface CustomizationContextType {
   updateUser: (id: string, user: Partial<SystemUser>) => void;
   deleteUser: (id: string) => void;
 
+  // Authentication State & Actions
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => void;
+
   layoutSettings: LayoutSettings;
   updateLayoutSettings: (settings: Partial<LayoutSettings>) => void;
 
   hasPermission: (permission: PermissionKey) => boolean;
+  isAdmin: boolean;
   resetAllCustomizations: () => void;
 }
 
@@ -64,13 +70,22 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return DEFAULT_STORE_SETTINGS;
   });
 
-  // 2. Users
+  // 2. Users (with stored passwords)
   const [users, setUsers] = useState<SystemUser[]>(() => {
     try {
       const saved = localStorage.getItem('znk_users');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge with DEFAULT_USERS to ensure passwords and initial data are present
+          return parsed.map((u: SystemUser) => {
+            const defaultMatch = DEFAULT_USERS.find(du => du.id === u.id || du.email.toLowerCase() === u.email.toLowerCase());
+            return {
+              ...u,
+              password: u.password || defaultMatch?.password || 'admin',
+            };
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -104,7 +119,21 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   });
 
-  // 4. Theme Settings (Linked to Current User or Global fallback)
+  // 4. Auth State (Persisted session)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const session = localStorage.getItem('znk_auth_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        return Boolean(parsed && parsed.userId);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return false;
+  });
+
+  // 5. Theme Settings
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(() => {
     try {
       const saved = localStorage.getItem('znk_theme_settings');
@@ -118,7 +147,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return { themeMode: currentUser?.themePreference || DEFAULT_THEME_SETTINGS.themeMode };
   });
 
-  // 5. Categories
+  // 6. Categories
   const [categories, setCategories] = useState<CategoryItem[]>(() => {
     try {
       const saved = localStorage.getItem('znk_categories');
@@ -132,7 +161,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return DEFAULT_CATEGORIES;
   });
 
-  // 6. Layout Settings
+  // 7. Layout Settings
   const [layoutSettings, setLayoutSettings] = useState<LayoutSettings>(() => {
     try {
       const saved = localStorage.getItem('znk_layout_settings');
@@ -155,12 +184,11 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  // Set Theme Mode (Claro / Escuro / Sistema) - Personalizado no usuário logado
+  // Set Theme Mode
   const setThemeMode = (mode: ThemeMode) => {
     setThemeSettings({ themeMode: mode });
     localStorage.setItem('znk_theme_settings', JSON.stringify({ themeMode: mode }));
 
-    // Atualiza a preferência do usuário ativo
     if (currentUser) {
       const updatedUser = { ...currentUser, themePreference: mode };
       setCurrentUserState(updatedUser);
@@ -178,7 +206,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Dynamic Theme Effect (Claro / Escuro / Sistema com listener OS)
+  // Dynamic Theme Effect (Claro / Escuro / Sistema)
   useEffect(() => {
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -192,7 +220,6 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       } else if (mode === 'light') {
         isDark = false;
       } else {
-        // Modo Sistema
         isDark = mediaQuery.matches;
       }
 
@@ -205,7 +232,6 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     applyTheme();
 
-    // Listener para quando o usuário alterar o tema do sistema operacional
     const handleChange = () => {
       if (themeSettings.themeMode === 'system') {
         applyTheme();
@@ -215,6 +241,46 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [themeSettings.themeMode]);
+
+  // LOGIN FUNCTION
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const foundUser = users.find(u => u.email.toLowerCase() === trimmedEmail);
+
+    if (!foundUser) {
+      return { success: false, message: 'Usuário não encontrado. Verifique o email informado.' };
+    }
+
+    const expectedPassword = foundUser.password || (foundUser.role === 'admin' ? 'admin' : '123456');
+
+    if (expectedPassword !== password) {
+      return { success: false, message: 'Senha incorreta. Tente novamente.' };
+    }
+
+    // Success: activate user and session
+    setCurrentUserState(foundUser);
+    setIsAuthenticated(true);
+
+    localStorage.setItem('znk_current_user_id', foundUser.id);
+    localStorage.setItem(
+      'znk_auth_session',
+      JSON.stringify({ userId: foundUser.id, email: foundUser.email, loggedAt: new Date().toISOString() })
+    );
+
+    // Apply user's theme preference if any
+    if (foundUser.themePreference) {
+      setThemeSettings({ themeMode: foundUser.themePreference });
+      localStorage.setItem('znk_theme_settings', JSON.stringify({ themeMode: foundUser.themePreference }));
+    }
+
+    return { success: true };
+  };
+
+  // LOGOUT FUNCTION
+  const logout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('znk_auth_session');
+  };
 
   // Categories CRUD
   const addCategory = (categoryData: Omit<CategoryItem, 'id'>) => {
@@ -250,12 +316,11 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem('znk_categories', JSON.stringify(DEFAULT_CATEGORIES));
   };
 
-  // Users & Permissions CRUD
+  // Users & Permissions CRUD (Admin Protected)
   const setCurrentUser = (user: SystemUser) => {
     setCurrentUserState(user);
     localStorage.setItem('znk_current_user_id', user.id);
 
-    // Aplica o tema personalizado deste usuário se ele tiver uma preferência
     if (user.themePreference) {
       setThemeSettings({ themeMode: user.themePreference });
       localStorage.setItem('znk_theme_settings', JSON.stringify({ themeMode: user.themePreference }));
@@ -263,9 +328,15 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const addUser = (userData: Omit<SystemUser, 'id'>) => {
+    if (currentUser.role !== 'admin') {
+      console.warn('Unauthorized: Only Admin users can create accounts');
+      return;
+    }
+
     const newUser: SystemUser = {
       ...userData,
       id: `user-${Date.now()}`,
+      password: userData.password || 'znk2026',
       themePreference: userData.themePreference || 'system',
     };
     setUsers(prev => {
@@ -276,6 +347,11 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateUser = (id: string, userData: Partial<SystemUser>) => {
+    if (currentUser.role !== 'admin' && currentUser.id !== id) {
+      console.warn('Unauthorized: Only Admin can update other users');
+      return;
+    }
+
     setUsers(prev => {
       const updated = prev.map(u => (u.id === id ? { ...u, ...userData } : u));
       localStorage.setItem('znk_users', JSON.stringify(updated));
@@ -290,6 +366,11 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const deleteUser = (id: string) => {
+    if (currentUser.role !== 'admin') {
+      console.warn('Unauthorized: Only Admin can delete users');
+      return;
+    }
+
     if (users.length <= 1) return;
     setUsers(prev => {
       const updated = prev.filter(u => u.id !== id);
@@ -312,9 +393,15 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // RBAC Permission Check
+  const isAdmin = currentUser?.role === 'admin';
+
   const hasPermission = (permission: PermissionKey): boolean => {
     if (!currentUser) return false;
     if (currentUser.role === 'admin') return true;
+
+    // Strict Admin-only for settings and user management
+    if (permission === 'settings_manage') return false;
+
     if (currentUser.customPermissions && currentUser.customPermissions.includes(permission)) {
       return true;
     }
@@ -359,9 +446,13 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
         addUser,
         updateUser,
         deleteUser,
+        isAuthenticated,
+        login,
+        logout,
         layoutSettings,
         updateLayoutSettings,
         hasPermission,
+        isAdmin,
         resetAllCustomizations,
       }}
     >

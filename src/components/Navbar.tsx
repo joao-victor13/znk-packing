@@ -8,7 +8,9 @@ import {
   Download, 
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 import { PurchaseOrder, ThemeMode } from '../types';
 import { exportOrdersListToExcel } from '../utils/exportExcel';
@@ -28,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNewOrder,
   orders,
 }) => {
-  const { storeSettings, currentUser, hasPermission, themeMode, setThemeMode } = useCustomization();
+  const { storeSettings, currentUser, hasPermission, isAdmin, themeMode, setThemeMode, logout } = useCustomization();
   const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
 
   const cycleTheme = () => {
@@ -104,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Fornecedores</span>
             </button>
 
-            {/* Customização & Configurações */}
+            {/* Configurações */}
             <button
               onClick={() => onNavigate('settings')}
               className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
@@ -114,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <SlidersHorizontal className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span>Configurar</span>
+              <span>Configurações</span>
             </button>
 
             {/* Export All Orders */}
@@ -132,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Light / Dark / System Quick Toggle */}
             <button
               onClick={cycleTheme}
-              title={`Tema atual: ${themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Escuro' : 'Automático / Sistema'}. Clique para alternar.`}
+              title={`Tema: ${themeMode === 'light' ? 'Claro' : themeMode === 'dark' ? 'Escuro' : 'Sistema'}. Clique para alternar.`}
               className="p-2 rounded-lg text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center justify-center"
             >
               {themeMode === 'light' && <Sun className="w-4 h-4 text-amber-500" />}
@@ -143,16 +145,31 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Active User Avatar Pill */}
             <div 
               onClick={() => onNavigate('settings')}
-              title={`Usuário: ${currentUser.name} (${currentUser.roleTitle})`}
+              title={`Perfil: ${currentUser.name} (${currentUser.roleTitle})`}
               className="flex items-center space-x-1.5 pl-2 pr-2.5 py-1 bg-stone-100 dark:bg-stone-800 hover:bg-brand-50 dark:hover:bg-stone-700 rounded-full border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors"
             >
               <div className={`w-6 h-6 rounded-full ${currentUser.avatarBg} text-white font-bold flex items-center justify-center text-[10px]`}>
                 {currentUser.name.charAt(0)}
               </div>
-              <span className="text-xs font-semibold text-editorial-text dark:text-stone-200 hidden md:inline truncate max-w-[100px]">
+              <span className="text-xs font-semibold text-editorial-text dark:text-stone-200 hidden md:inline truncate max-w-[90px]">
                 {currentUser.name.split(' ')[0]}
               </span>
+              {isAdmin && (
+                <span className="px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-[9px] font-bold border border-amber-300 dark:border-amber-800 hidden xl:inline-flex items-center">
+                  <ShieldCheck className="w-2.5 h-2.5 mr-0.5" />
+                  Admin
+                </span>
+              )}
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              title="Encerrar sessão / Sair do sistema"
+              className="p-2 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center justify-center"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
 
             {/* Primary Action: Novo Pedido */}
             {hasPermission('orders_create') && (

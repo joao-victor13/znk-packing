@@ -220,3 +220,13 @@ INSERT INTO "categories" ("name", "slug", "badge_bg", "badge_text", "badge_borde
 ('Bodies & Croppeds', 'bodies-croppeds', 'bg-purple-50', 'text-purple-800', 'border-purple-200'),
 ('Casacos & Blazers', 'casacos-blazers', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200')
 ON CONFLICT ("slug") DO NOTHING;
+
+-- 12. DADOS INICIAIS DE USUÁRIOS (COM SENHAS CRIPTOGRAFADAS)
+INSERT INTO "users" ("name", "email", "password_hash", "role", "role_title") VALUES
+('Helena Zink', 'admin@znkpacking.com.br', crypt('admin', gen_salt('bf')), 'ADMIN', 'Diretora & Administradora Geral'),
+('Camila Duarte', 'camila.duarte@znkpacking.com.br', crypt('compras123', gen_salt('bf')), 'BUYER', 'Estilista & Compradora Sênior'),
+('Rodrigo Mendes', 'rodrigo.pcp@znkpacking.com.br', crypt('pcp123', gen_salt('bf')), 'PRODUCTION_MANAGER', 'Gerente de Produção & PCP'),
+('Mariana Rocha', 'financeiro@znkpacking.com.br', crypt('fin123', gen_salt('bf')), 'FINANCE', 'Controladoria & Custos'),
+('Beatriz Lima', 'assistente@znkpacking.com.br', crypt('assist123', gen_salt('bf')), 'VIEWER', 'Assistente de Estoque')
+ON CONFLICT ("email") DO NOTHING;
+

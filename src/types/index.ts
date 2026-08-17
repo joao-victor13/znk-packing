@@ -170,6 +170,7 @@ export interface SystemUser {
   id: string;
   name: string;
   email: string;
+  password?: string;
   avatarBg: string;
   role: UserRole;
   roleTitle: string;
