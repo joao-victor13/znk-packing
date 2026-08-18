@@ -72,7 +72,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
 
 export const DEFAULT_USERS: SystemUser[] = [
   {
-    id: 'usr-1',
+    id: 'a0000000-0000-0000-0000-000000000001',
     name: 'Helena Zink',
     email: 'admin@znkpacking.com.br',
     password: 'admin',
@@ -83,7 +83,7 @@ export const DEFAULT_USERS: SystemUser[] = [
     customPermissions: ROLE_DEFAULT_PERMISSIONS.admin,
   },
   {
-    id: 'usr-2',
+    id: 'a0000000-0000-0000-0000-000000000002',
     name: 'Camila Duarte',
     email: 'camila.duarte@znkpacking.com.br',
     password: 'compras123',
@@ -94,7 +94,7 @@ export const DEFAULT_USERS: SystemUser[] = [
     customPermissions: ROLE_DEFAULT_PERMISSIONS.buyer_stylist,
   },
   {
-    id: 'usr-3',
+    id: 'a0000000-0000-0000-0000-000000000003',
     name: 'Rodrigo Mendes',
     email: 'rodrigo.pcp@znkpacking.com.br',
     password: 'pcp123',
@@ -105,7 +105,7 @@ export const DEFAULT_USERS: SystemUser[] = [
     customPermissions: ROLE_DEFAULT_PERMISSIONS.production_manager,
   },
   {
-    id: 'usr-4',
+    id: 'a0000000-0000-0000-0000-000000000004',
     name: 'Mariana Rocha',
     email: 'financeiro@znkpacking.com.br',
     password: 'fin123',
@@ -116,7 +116,7 @@ export const DEFAULT_USERS: SystemUser[] = [
     customPermissions: ROLE_DEFAULT_PERMISSIONS.financial_auditor,
   },
   {
-    id: 'usr-5',
+    id: 'a0000000-0000-0000-0000-000000000005',
     name: 'Beatriz Lima',
     email: 'assistente@znkpacking.com.br',
     password: 'assist123',
@@ -127,3 +127,4 @@ export const DEFAULT_USERS: SystemUser[] = [
     customPermissions: ROLE_DEFAULT_PERMISSIONS.sales_assistant,
   },
 ];
+

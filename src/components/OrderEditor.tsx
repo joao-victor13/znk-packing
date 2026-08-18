@@ -32,7 +32,8 @@ import {
   formatDate,
   formatCNPJ, 
   formatPhone,
-  generateNextOrderNumber
+  generateNextOrderNumber,
+  generateUUID
 } from '../utils/calculations';
 import { 
   FASHION_COLORS, 
@@ -68,7 +69,7 @@ export const OrderEditor: React.FC<OrderEditorProps> = ({
 
   // Generate empty item template
   const createEmptyItem = (index?: number): OrderItem => ({
-    id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+    id: generateUUID(),
     sku: index !== undefined ? `REF-${String(index + 1).padStart(3, '0')}` : '',
     description: '',
     category: categories[0]?.name || 'Vestidos',
@@ -209,7 +210,7 @@ export const OrderEditor: React.FC<OrderEditorProps> = ({
     const itemToClone = items[index];
     const cloned: OrderItem = {
       ...itemToClone,
-      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      id: generateUUID(),
       sku: itemToClone.sku ? `${itemToClone.sku}-COP` : '',
     };
     const updated = [...items];
@@ -276,7 +277,7 @@ export const OrderEditor: React.FC<OrderEditorProps> = ({
     const sup = suppliers.find(s => s.id === selectedSupplierId) || suppliers[0];
 
     const newOrder: PurchaseOrder = {
-      id: orderToEdit ? orderToEdit.id : `ord-${Date.now()}`,
+      id: orderToEdit ? orderToEdit.id : generateUUID(),
       orderNumber,
       supplierId: sup.id,
       supplierName: sup.tradeName || sup.corporateName || sup.name || 'Fornecedor',

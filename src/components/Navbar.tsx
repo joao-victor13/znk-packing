@@ -66,6 +66,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <Sparkles className="w-2.5 h-2.5 mr-1 text-brand-600 dark:text-brand-400" />
                   ERP
                 </span>
+                <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40" title="Sincronização em Nuvem Supabase ativa em tempo real">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1" />
+                  Nuvem Supabase
+                </span>
               </div>
               <p className="text-[11px] text-editorial-muted dark:text-stone-400 hidden sm:block truncate max-w-xs">
                 {storeSettings.tagline || 'Gestão de Pedidos & Confecção'}

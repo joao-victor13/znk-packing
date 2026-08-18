@@ -10,6 +10,7 @@ ALTER TABLE IF EXISTS "purchase_orders" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS "purchase_order_items" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS "categories" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS "store_settings" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS "users" ENABLE ROW LEVEL SECURITY;
 
 -- 2. POLÍTICAS DE ACESSO TOTAL PARA FORNECEDORES (SUPPLIERS)
 DROP POLICY IF EXISTS "Permitir leitura de fornecedores" ON "suppliers";
@@ -56,3 +57,7 @@ CREATE POLICY "Permitir acesso geral de categorias" ON "categories" FOR ALL USIN
 
 DROP POLICY IF EXISTS "Permitir acesso geral de configuracoes" ON "store_settings";
 CREATE POLICY "Permitir acesso geral de configuracoes" ON "store_settings" FOR ALL USING (true) WITH CHECK (true);
+
+-- 6. POLÍTICAS PARA USUÁRIOS (USERS)
+DROP POLICY IF EXISTS "Permitir acesso geral de usuarios" ON "users";
+CREATE POLICY "Permitir acesso geral de usuarios" ON "users" FOR ALL USING (true) WITH CHECK (true);

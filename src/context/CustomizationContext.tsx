@@ -17,6 +17,14 @@ import {
   DEFAULT_LAYOUT_SETTINGS, 
   ROLE_DEFAULT_PERMISSIONS
 } from '../data/initialCustomization';
+import {
+  fetchStoreSettingsFromSupabase,
+  saveStoreSettingsToSupabase,
+  fetchCategoriesFromSupabase,
+  saveCategoryToSupabase,
+  deleteCategoryFromSupabase
+} from '../services/supabaseClient';
+import { generateUUID } from '../utils/calculations';
 
 interface CustomizationContextType {
   storeSettings: StoreSettings;
@@ -79,13 +87,14 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
         if (Array.isArray(parsed) && parsed.length > 0) {
           // Merge with DEFAULT_USERS
           const merged = parsed.map((u: SystemUser) => {
-            const isAdm = u.role === 'admin' || u.id === 'usr-1' || u.email.includes('admin') || u.email.includes('helena');
+            const isAdm = u.role === 'admin' || u.id === 'a0000000-0000-0000-0000-000000000001' || u.id === 'usr-1' || u.email.includes('admin') || u.email.includes('helena');
             const defaultMatch = DEFAULT_USERS.find(
               du => du.id === u.id || du.email.toLowerCase() === u.email.toLowerCase()
             );
 
             return {
               ...u,
+              id: isAdm ? 'a0000000-0000-0000-0000-000000000001' : (u.id || defaultMatch?.id || generateUUID()),
               email: isAdm ? 'admin@znkpacking.com.br' : (u.email || defaultMatch?.email || ''),
               password: u.password || (isAdm ? 'admin' : (defaultMatch?.password || '123456')),
               role: (isAdm ? 'admin' : u.role) as UserRole,
@@ -191,11 +200,36 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return DEFAULT_LAYOUT_SETTINGS;
   });
 
+  // Load latest store settings & categories from Supabase on mount
+  useEffect(() => {
+    async function loadCloudCustomization() {
+      try {
+        const [cloudSettings, cloudCats] = await Promise.all([
+          fetchStoreSettingsFromSupabase(),
+          fetchCategoriesFromSupabase()
+        ]);
+
+        if (cloudSettings) {
+          setStoreSettings(cloudSettings);
+          localStorage.setItem('znk_store_settings', JSON.stringify(cloudSettings));
+        }
+        if (cloudCats && cloudCats.length > 0) {
+          setCategories(cloudCats);
+          localStorage.setItem('znk_categories', JSON.stringify(cloudCats));
+        }
+      } catch (err) {
+        console.warn('Could not sync customization with Supabase on load', err);
+      }
+    }
+    loadCloudCustomization();
+  }, []);
+
   // Persist Store Settings
   const updateStoreSettings = (newSettings: Partial<StoreSettings>) => {
     setStoreSettings(prev => {
       const updated = { ...prev, ...newSettings };
       localStorage.setItem('znk_store_settings', JSON.stringify(updated));
+      saveStoreSettingsToSupabase(updated);
       return updated;
     });
   };
@@ -274,7 +308,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       const adminUser: SystemUser = users.find(u => u.role === 'admin') || DEFAULT_USERS[0];
       const activeAdmin: SystemUser = {
         ...adminUser,
-        id: 'usr-1',
+        id: 'a0000000-0000-0000-0000-000000000001',
         name: adminUser.name || 'Helena Zink',
         email: 'admin@znkpacking.com.br',
         password: 'admin',
@@ -345,32 +379,49 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Categories CRUD
-  const addCategory = (categoryData: Omit<CategoryItem, 'id'>) => {
+  const addCategory = async (categoryData: Omit<CategoryItem, 'id'>) => {
     const newCat: CategoryItem = {
       ...categoryData,
-      id: `cat-${Date.now()}`,
+      id: generateUUID(),
     };
     setCategories(prev => {
       const updated = [...prev, newCat];
       localStorage.setItem('znk_categories', JSON.stringify(updated));
       return updated;
     });
+
+    const saved = await saveCategoryToSupabase(newCat);
+    if (saved) {
+      setCategories(prev => prev.map(c => (c.id === newCat.id ? saved : c)));
+    }
   };
 
-  const updateCategory = (id: string, categoryData: Partial<CategoryItem>) => {
+  const updateCategory = async (id: string, categoryData: Partial<CategoryItem>) => {
+    let updatedCat: CategoryItem | undefined;
     setCategories(prev => {
-      const updated = prev.map(c => (c.id === id ? { ...c, ...categoryData } : c));
+      const updated = prev.map(c => {
+        if (c.id === id) {
+          updatedCat = { ...c, ...categoryData };
+          return updatedCat;
+        }
+        return c;
+      });
       localStorage.setItem('znk_categories', JSON.stringify(updated));
       return updated;
     });
+
+    if (updatedCat) {
+      await saveCategoryToSupabase(updatedCat);
+    }
   };
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = async (id: string) => {
     setCategories(prev => {
       const updated = prev.filter(c => c.id !== id);
       localStorage.setItem('znk_categories', JSON.stringify(updated));
       return updated;
     });
+    await deleteCategoryFromSupabase(id);
   };
 
   const resetCategories = () => {
@@ -397,7 +448,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const newUser: SystemUser = {
       ...userData,
-      id: `user-${Date.now()}`,
+      id: generateUUID(),
       password: userData.password || 'znk2026',
       themePreference: userData.themePreference || 'system',
     };

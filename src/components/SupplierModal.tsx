@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Building2, Save, Sparkles } from 'lucide-react';
 import { Supplier } from '../types';
 import { PAYMENT_TERMS_OPTIONS } from '../data/initialData';
+import { generateUUID } from '../utils/calculations';
 
 interface SupplierModalProps {
   supplierToEdit?: Supplier | null;
@@ -40,9 +41,10 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
     }
 
     const supplier: Supplier = {
-      id: supplierToEdit ? supplierToEdit.id : `sup-${Date.now()}`,
+      id: supplierToEdit ? supplierToEdit.id : generateUUID(),
       tradeName,
       name,
+      corporateName: name,
       cnpj,
       contactName,
       phone,

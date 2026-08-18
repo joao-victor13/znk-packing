@@ -21,7 +21,7 @@ import {
   INITIAL_ORDERS, 
   INITIAL_SUPPLIERS 
 } from './data/initialData';
-import { getDeliveryDeadlineStatus } from './utils/calculations';
+import { getDeliveryDeadlineStatus, generateUUID } from './utils/calculations';
 import { CustomizationProvider, useCustomization } from './context/CustomizationContext';
 import { 
   fetchOrdersFromSupabase, 
@@ -30,22 +30,22 @@ import {
   updateOrderStatusInSupabase,
   deleteOrderFromSupabase,
   saveSupplierToSupabase,
-  deleteSupplierFromSupabase
+  deleteSupplierFromSupabase,
+  subscribeToOrders,
+  subscribeToSuppliers
 } from './services/supabaseClient';
 
 function AppContent() {
-  const { layoutSettings, isAuthenticated } = useCustomization();
-
-  // If user is not authenticated, show luxury login screen
-  if (!isAuthenticated) {
-    return <LoginView />;
-  }
+  const { layoutSettings, isAuthenticated, currentUser } = useCustomization();
 
   // 1. Storage-backed state for Orders
   const [orders, setOrders] = useState<PurchaseOrder[]>(() => {
     try {
       const saved = localStorage.getItem('znk_fashion_orders');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error('Failed to load orders from storage', e);
     }
@@ -56,7 +56,10 @@ function AppContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
     try {
       const saved = localStorage.getItem('znk_fashion_suppliers');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error('Failed to load suppliers from storage', e);
     }
@@ -85,6 +88,36 @@ function AppContent() {
       }
     }
     loadCloudData();
+
+    // Multi-device & multi-network realtime subscription
+    const unsubOrders = subscribeToOrders(async () => {
+      try {
+        const freshOrders = await fetchOrdersFromSupabase();
+        if (freshOrders && freshOrders.length > 0) {
+          setOrders(freshOrders);
+          localStorage.setItem('znk_fashion_orders', JSON.stringify(freshOrders));
+        }
+      } catch (e) {
+        console.warn('Realtime order update error:', e);
+      }
+    });
+
+    const unsubSuppliers = subscribeToSuppliers(async () => {
+      try {
+        const freshSuppliers = await fetchSuppliersFromSupabase();
+        if (freshSuppliers && freshSuppliers.length > 0) {
+          setSuppliers(freshSuppliers);
+          localStorage.setItem('znk_fashion_suppliers', JSON.stringify(freshSuppliers));
+        }
+      } catch (e) {
+        console.warn('Realtime supplier update error:', e);
+      }
+    });
+
+    return () => {
+      unsubOrders();
+      unsubSuppliers();
+    };
   }, []);
 
   // Save to localStorage when state changes
@@ -171,7 +204,7 @@ function AppContent() {
   };
 
   // Create new order for specific supplier
-  const handleNewOrderForSupplier = (supplier: Supplier) => {
+  const handleNewOrderForSupplier = (_supplier: Supplier) => {
     setOrderToEdit(null);
     setActiveView('editor');
   };
@@ -183,11 +216,11 @@ function AppContent() {
   };
 
   // Duplicate order
-  const handleDuplicateOrder = (order: PurchaseOrder) => {
+  const handleDuplicateOrder = async (order: PurchaseOrder) => {
     const nextNum = `PED-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const cloned: PurchaseOrder = {
       ...order,
-      id: `ord-${Date.now()}`,
+      id: generateUUID(),
       orderNumber: nextNum,
       status: 'pending',
       issueDate: new Date().toISOString().split('T')[0],
@@ -196,58 +229,75 @@ function AppContent() {
     };
     setOrders(prev => [cloned, ...prev]);
     showToast(`Pedido ${order.orderNumber} duplicado como ${nextNum}!`, 'success');
-    saveOrderToSupabase(cloned);
+    
+    const cloudOrder = await saveOrderToSupabase(cloned, currentUser?.id);
+    if (cloudOrder) {
+      setOrders(prev => prev.map(o => (o.id === cloned.id ? cloudOrder : o)));
+    }
   };
 
   // Delete order
-  const handleDeleteOrder = (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string) => {
     setOrders(prev => prev.filter(o => o.id !== orderId));
     showToast('Pedido excluído com sucesso.', 'info');
-    deleteOrderFromSupabase(orderId);
+    await deleteOrderFromSupabase(orderId);
   };
 
   // Quick Status Update
-  const handleUpdateStatus = (orderId: string, status: OrderStatus) => {
+  const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
     setOrders(prev =>
       prev.map(o => (o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o))
     );
     showToast(`Status atualizado para: ${status}`, 'success');
-    updateOrderStatusInSupabase(orderId, status);
+    await updateOrderStatusInSupabase(orderId, status);
   };
 
   // Save Order from Editor
-  const handleSaveOrder = (savedOrder: PurchaseOrder) => {
+  const handleSaveOrder = async (savedOrder: PurchaseOrder) => {
     if (orderToEdit) {
       setOrders(prev => prev.map(o => (o.id === savedOrder.id ? savedOrder : o)));
-      showToast(`Pedido ${savedOrder.orderNumber} atualizado com sucesso!`, 'success');
+      showToast(`Pedido ${savedOrder.orderNumber} atualizado!`, 'success');
     } else {
       setOrders(prev => [savedOrder, ...prev]);
-      showToast(`Pedido ${savedOrder.orderNumber} criado e registrado!`, 'success');
+      showToast(`Pedido ${savedOrder.orderNumber} registrado!`, 'success');
     }
     setActiveView('list');
     setOrderToEdit(null);
-    saveOrderToSupabase(savedOrder);
+
+    const cloudOrder = await saveOrderToSupabase(savedOrder, currentUser?.id);
+    if (cloudOrder) {
+      setOrders(prev => prev.map(o => (o.id === savedOrder.id ? cloudOrder : o)));
+    }
   };
 
   // Save Supplier
-  const handleSaveSupplier = (savedSupplier: Supplier) => {
+  const handleSaveSupplier = async (savedSupplier: Supplier) => {
     if (supplierToEdit) {
       setSuppliers(prev => prev.map(s => (s.id === savedSupplier.id ? savedSupplier : s)));
       showToast(`Fornecedor ${savedSupplier.tradeName} atualizado!`, 'success');
     } else {
       setSuppliers(prev => [...prev, savedSupplier]);
-      showToast(`Fornecedor ${savedSupplier.tradeName} cadastrado com sucesso!`, 'success');
+      showToast(`Fornecedor ${savedSupplier.tradeName} cadastrado!`, 'success');
     }
     setSupplierToEdit(null);
-    saveSupplierToSupabase(savedSupplier);
+
+    const cloudSupplier = await saveSupplierToSupabase(savedSupplier);
+    if (cloudSupplier) {
+      setSuppliers(prev => prev.map(s => (s.id === savedSupplier.id ? cloudSupplier : s)));
+    }
   };
 
   // Delete Supplier
-  const handleDeleteSupplier = (supplierId: string) => {
+  const handleDeleteSupplier = async (supplierId: string) => {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
     showToast('Fornecedor removido com sucesso.', 'info');
-    deleteSupplierFromSupabase(supplierId);
+    await deleteSupplierFromSupabase(supplierId);
   };
+
+  // If user is not authenticated, show login screen (Hooks already called above safely)
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
 
   // Filter and Sort Orders
   const filteredOrders = orders.filter(order => {
