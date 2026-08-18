@@ -82,15 +82,13 @@ O **ZNK Packing** é um ERP e sistema de gestão de compras, confecção e relac
 
 ---
 
-## 3. 👥 Credenciais & Perfis de Usuário
+## 3. 👥 Credenciais & Níveis de Acesso (RBAC)
 
-| Nome | Cargo / Perfil | Email de Acesso | Senha Padrão | Permissões |
+| Cargo / Nível | Nome Padrão | Email de Acesso | Senha Padrão | Permissões no Sistema |
 | :--- | :--- | :--- | :--- | :--- |
-| **Helena Zink** | Administradora Geral | `admin@znkpacking.com.br` | `admin` | **Acesso Total** (Usuários, Configurações, Pedidos, Custos) |
-| **Camila Duarte** | Estilista & Compradora | `camila.duarte@znkpacking.com.br` | `compras123` | Criação e Edição de Pedidos de Compra |
-| **Rodrigo Mendes** | Gerente de PCP | `rodrigo.pcp@znkpacking.com.br` | `pcp123` | Prazos, Status e Logística |
-| **Mariana Rocha** | Controladoria & Financeiro | `financeiro@znkpacking.com.br` | `fin123` | Custos, Margens e Relatórios |
-| **Beatriz Lima** | Assistente de Estoque | `assistente@znkpacking.com.br` | `assist123` | Visualização e Consulta |
+| **Administrador (Admin)** | Helena Zink | `admin@znkpacking.com.br` | `admin` | **Acesso Total** (Criação/Edição/Exclusão de Usuários, Configurações Fiscais da Loja, Pedidos, Custos, Fornecedores e Categorias) |
+| **Vendedor (a)** | Camila Duarte | `camila.duarte@znkpacking.com.br` | `compras123` | Criação e Edição de Pedidos de Compra, Visualização de Custos e Gestão de Fornecedores |
+| **Estoquista** | Rodrigo Mendes | `rodrigo.pcp@znkpacking.com.br` | `pcp123` | Edição e Aprovação de Pedidos, Acompanhamento de Prazos, Fornecedores e Exportação |
 
 ---
 

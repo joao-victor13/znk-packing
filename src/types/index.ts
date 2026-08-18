@@ -161,10 +161,8 @@ export type PermissionKey =
 
 export type UserRole =
   | 'admin'               // Administrador Geral (Acesso Total)
-  | 'buyer_stylist'       // Comprador / Estilista (Criação e Edição de Pedidos)
-  | 'production_manager'  // Gerente de Produção / PCP (Status, Prazos e Logística)
-  | 'financial_auditor'   // Financeiro (Custos, Faturamento e Relatórios)
-  | 'sales_assistant';    // Assistente / Visualizador
+  | 'seller'              // Vendedor (a)
+  | 'stockist';           // Estoquista
 
 export interface SystemUser {
   id: string;
@@ -173,7 +171,7 @@ export interface SystemUser {
   password?: string;
   avatarBg: string;
   role: UserRole;
-  roleTitle: string;
+  roleTitle?: string;
   themePreference?: ThemeMode;
   customPermissions?: PermissionKey[];
 }

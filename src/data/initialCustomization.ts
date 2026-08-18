@@ -54,21 +54,28 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     'orders_create', 'orders_edit', 'orders_delete', 'orders_approve', 'orders_view_costs',
     'suppliers_manage', 'categories_manage', 'settings_manage', 'export_reports'
   ],
-  buyer_stylist: [
+  seller: [
     'orders_create', 'orders_edit', 'orders_view_costs',
-    'suppliers_manage', 'categories_manage', 'export_reports'
+    'suppliers_manage', 'export_reports'
   ],
-  production_manager: [
+  stockist: [
     'orders_edit', 'orders_approve',
     'suppliers_manage', 'export_reports'
   ],
-  financial_auditor: [
-    'orders_view_costs', 'export_reports'
-  ],
-  sales_assistant: [
-    'export_reports'
-  ],
 };
+
+export function getUserRoleLabel(role: UserRole): string {
+  switch (role) {
+    case 'admin':
+      return 'Administrador';
+    case 'seller':
+      return 'Vendedor (a)';
+    case 'stockist':
+      return 'Estoquista';
+    default:
+      return 'Colaborador';
+  }
+}
 
 export const DEFAULT_USERS: SystemUser[] = [
   {
@@ -77,7 +84,6 @@ export const DEFAULT_USERS: SystemUser[] = [
     email: 'admin@znkpacking.com.br',
     password: 'admin',
     role: 'admin',
-    roleTitle: 'Diretora & Administradora Geral',
     avatarBg: 'bg-brand-600',
     themePreference: 'system',
     customPermissions: ROLE_DEFAULT_PERMISSIONS.admin,
@@ -87,44 +93,20 @@ export const DEFAULT_USERS: SystemUser[] = [
     name: 'Camila Duarte',
     email: 'camila.duarte@znkpacking.com.br',
     password: 'compras123',
-    role: 'buyer_stylist',
-    roleTitle: 'Estilista & Compradora Sênior',
+    role: 'seller',
     avatarBg: 'bg-rose-500',
     themePreference: 'light',
-    customPermissions: ROLE_DEFAULT_PERMISSIONS.buyer_stylist,
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.seller,
   },
   {
     id: 'a0000000-0000-0000-0000-000000000003',
     name: 'Rodrigo Mendes',
     email: 'rodrigo.pcp@znkpacking.com.br',
     password: 'pcp123',
-    role: 'production_manager',
-    roleTitle: 'Gerente de Produção & PCP',
+    role: 'stockist',
     avatarBg: 'bg-blue-600',
     themePreference: 'dark',
-    customPermissions: ROLE_DEFAULT_PERMISSIONS.production_manager,
-  },
-  {
-    id: 'a0000000-0000-0000-0000-000000000004',
-    name: 'Mariana Rocha',
-    email: 'financeiro@znkpacking.com.br',
-    password: 'fin123',
-    role: 'financial_auditor',
-    roleTitle: 'Controladoria & Custos',
-    avatarBg: 'bg-emerald-600',
-    themePreference: 'light',
-    customPermissions: ROLE_DEFAULT_PERMISSIONS.financial_auditor,
-  },
-  {
-    id: 'a0000000-0000-0000-0000-000000000005',
-    name: 'Beatriz Lima',
-    email: 'assistente@znkpacking.com.br',
-    password: 'assist123',
-    role: 'sales_assistant',
-    roleTitle: 'Assistente de Estoque',
-    avatarBg: 'bg-purple-600',
-    themePreference: 'system',
-    customPermissions: ROLE_DEFAULT_PERMISSIONS.sales_assistant,
+    customPermissions: ROLE_DEFAULT_PERMISSIONS.stockist,
   },
 ];
 

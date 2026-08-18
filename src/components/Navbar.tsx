@@ -15,6 +15,7 @@ import {
 import { PurchaseOrder, ThemeMode } from '../types';
 import { exportOrdersListToExcel } from '../utils/exportExcel';
 import { useCustomization } from '../context/CustomizationContext';
+import { getUserRoleLabel } from '../data/initialCustomization';
 
 interface NavbarProps {
   activeView: 'list' | 'editor' | 'suppliers' | 'settings';
@@ -65,10 +66,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-100 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 tracking-wider uppercase border border-brand-300 dark:border-brand-800">
                   <Sparkles className="w-2.5 h-2.5 mr-1 text-brand-600 dark:text-brand-400" />
                   ERP
-                </span>
-                <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40" title="Sincronização em Nuvem Supabase ativa em tempo real">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1" />
-                  Nuvem Supabase
                 </span>
               </div>
               <p className="text-[11px] text-editorial-muted dark:text-stone-400 hidden sm:block truncate max-w-xs">
@@ -149,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Active User Avatar Pill */}
             <div 
               onClick={() => onNavigate('settings')}
-              title={`Perfil: ${currentUser.name} (${currentUser.roleTitle})`}
+              title={`Perfil: ${currentUser.name} (${getUserRoleLabel(currentUser.role)})`}
               className="flex items-center space-x-1.5 pl-2 pr-2.5 py-1 bg-stone-100 dark:bg-stone-800 hover:bg-brand-50 dark:hover:bg-stone-700 rounded-full border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors"
             >
               <div className={`w-6 h-6 rounded-full ${currentUser.avatarBg} text-white font-bold flex items-center justify-center text-[10px]`}>

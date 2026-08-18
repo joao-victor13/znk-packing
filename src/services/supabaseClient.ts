@@ -67,14 +67,12 @@ function fromDbStatus(status: string): OrderStatus {
   }
 }
 
-// Role conversions
+// Role conversions (Admin, Vendedor(a), Estoquista)
 export function toDbRole(role?: UserRole): string {
   switch (role) {
     case 'admin': return 'ADMIN';
-    case 'buyer_stylist': return 'BUYER';
-    case 'production_manager': return 'PRODUCTION_MANAGER';
-    case 'financial_auditor': return 'FINANCE';
-    case 'sales_assistant': return 'VIEWER';
+    case 'seller': return 'BUYER';
+    case 'stockist': return 'VIEWER';
     default: return 'BUYER';
   }
 }
@@ -82,11 +80,13 @@ export function toDbRole(role?: UserRole): string {
 export function fromDbRole(role?: string): UserRole {
   switch (role?.toUpperCase()) {
     case 'ADMIN': return 'admin';
-    case 'BUYER': return 'buyer_stylist';
-    case 'PRODUCTION_MANAGER': return 'production_manager';
-    case 'FINANCE': return 'financial_auditor';
-    case 'VIEWER': return 'sales_assistant';
-    default: return 'buyer_stylist';
+    case 'SELLER':
+    case 'BUYER': return 'seller';
+    case 'STOCKIST':
+    case 'VIEWER':
+    case 'PRODUCTION_MANAGER':
+    case 'FINANCE': return 'stockist';
+    default: return 'seller';
   }
 }
 
@@ -116,14 +116,14 @@ export async function fetchUsersFromSupabase(): Promise<SystemUser[] | null> {
         du => du.id === row.id || du.email.toLowerCase() === row.email.toLowerCase()
       );
 
+      const parsedRole = fromDbRole(row.role);
       return {
         id: row.id,
         name: row.name || 'Colaborador',
         email: row.email,
         password: row.password_hash || defaultMatch?.password || '123456',
         avatarBg: defaultMatch?.avatarBg || 'bg-brand-600',
-        role: fromDbRole(row.role),
-        roleTitle: row.role_title || defaultMatch?.roleTitle || 'Colaborador',
+        role: parsedRole,
         themePreference: defaultMatch?.themePreference || 'system',
         customPermissions: defaultMatch?.customPermissions,
       };
@@ -143,7 +143,7 @@ export async function saveUserToSupabase(user: SystemUser): Promise<SystemUser |
       email: user.email.toLowerCase().trim(),
       password_hash: user.password || '123456',
       role: toDbRole(user.role),
-      role_title: user.roleTitle,
+      role_title: user.role === 'admin' ? 'Administrador' : user.role === 'seller' ? 'Vendedor (a)' : 'Estoquista',
       is_active: true,
       updated_at: new Date().toISOString(),
     };
@@ -170,7 +170,6 @@ export async function saveUserToSupabase(user: SystemUser): Promise<SystemUser |
       password: data.password_hash || user.password,
       avatarBg: user.avatarBg || 'bg-brand-600',
       role: fromDbRole(data.role),
-      roleTitle: data.role_title,
       themePreference: user.themePreference || 'system',
       customPermissions: user.customPermissions,
     };

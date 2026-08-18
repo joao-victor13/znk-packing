@@ -5,17 +5,15 @@ import {
   Eye, 
   EyeOff, 
   Sparkles, 
-  ShieldCheck, 
   ArrowRight,
-  AlertCircle,
-  Users
+  AlertCircle 
 } from 'lucide-react';
 import { useCustomization } from '../context/CustomizationContext';
 
 export const LoginView: React.FC = () => {
-  const { login, users, storeSettings } = useCustomization();
-  const [email, setEmail] = useState('admin@znkpacking.com.br');
-  const [password, setPassword] = useState('admin');
+  const { login, storeSettings } = useCustomization();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,27 +36,6 @@ export const LoginView: React.FC = () => {
       }
     } catch (err) {
       setErrorMsg('Erro de autenticação no servidor. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Quick fill & login demo user credentials
-  const handleQuickLogin = async (demoEmail: string, demoPass?: string) => {
-    const user = users.find(u => u.email.toLowerCase() === demoEmail.toLowerCase());
-    const pass = demoPass || user?.password || 'admin';
-    setEmail(demoEmail);
-    setPassword(pass);
-    setErrorMsg('');
-    setIsLoading(true);
-
-    try {
-      const res = await login(demoEmail, pass);
-      if (!res.success) {
-        setErrorMsg(res.message || 'Credenciais inválidas.');
-      }
-    } catch (err) {
-      setErrorMsg('Erro de autenticação no servidor.');
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +86,7 @@ export const LoginView: React.FC = () => {
                 <input
                   type="email"
                   required
-                  placeholder="admin@znkpacking.com.br"
+                  placeholder="seu.email@znkpacking.com.br"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 placeholder-editorial-muted dark:placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -177,35 +154,6 @@ export const LoginView: React.FC = () => {
               )}
             </button>
           </form>
-
-          {/* Quick 1-Click Access for Team Demonstration */}
-          {users && users.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
-              <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-editorial-muted dark:text-stone-400 mb-2.5">
-                <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                <span>Acesso Rápido por Perfil:</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                {users.slice(0, 4).map(u => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => handleQuickLogin(u.email, u.password || '123456')}
-                    className="p-2 rounded-lg bg-stone-50 dark:bg-stone-800/80 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 text-left transition-colors truncate"
-                  >
-                    <div className="font-bold text-stone-800 dark:text-stone-200 flex items-center space-x-1">
-                      {u.role === 'admin' && <ShieldCheck className="w-3 h-3 text-brand-600 dark:text-brand-400" />}
-                      <span className="truncate">{u.name}</span>
-                    </div>
-                    <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
-                      {u.email}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer info */}
@@ -216,3 +164,5 @@ export const LoginView: React.FC = () => {
     </div>
   );
 };
+
+export default LoginView;

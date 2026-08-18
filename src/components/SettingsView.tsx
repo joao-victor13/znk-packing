@@ -10,6 +10,7 @@ import {
   Check, 
   Plus, 
   Trash2, 
+  Pencil,
   SlidersHorizontal,
   Sun,
   Moon,
@@ -29,7 +30,8 @@ import {
   PermissionKey 
 } from '../types';
 import { 
-  ROLE_DEFAULT_PERMISSIONS 
+  ROLE_DEFAULT_PERMISSIONS,
+  getUserRoleLabel 
 } from '../data/initialCustomization';
 import { formatCNPJ, formatPhone } from '../utils/calculations';
 
@@ -77,20 +79,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
 
   // User modal/form state
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [showUserPassword, setShowUserPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+
   const [newUserForm, setNewUserForm] = useState<{
     name: string;
     email: string;
     password: string;
     role: UserRole;
-    roleTitle: string;
     themePreference: ThemeMode;
   }>({
     name: '',
     email: '',
     password: '',
-    role: 'buyer_stylist',
-    roleTitle: 'Compradora de Moda',
+    role: 'seller',
+    themePreference: 'system',
+  });
+
+  const [editUserForm, setEditUserForm] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    role: UserRole;
+    themePreference: ThemeMode;
+  }>({
+    name: '',
+    email: '',
+    password: '',
+    role: 'seller',
     themePreference: 'system',
   });
 
@@ -158,7 +176,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
   };
 
   // Add User Handler (Admin only)
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAdmin) {
       onShowToast('Apenas administradores podem cadastrar novos usuários.', 'error');
@@ -172,12 +190,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
     const avatars = ['bg-brand-600', 'bg-rose-500', 'bg-emerald-600', 'bg-blue-600', 'bg-purple-600'];
     const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
-    addUser({
+    await addUser({
       name: newUserForm.name.trim(),
       email: newUserForm.email.trim(),
       password: newUserForm.password.trim(),
       role: newUserForm.role,
-      roleTitle: newUserForm.roleTitle.trim() || 'Colaborador',
       avatarBg: randomAvatar,
       themePreference: newUserForm.themePreference,
       customPermissions: ROLE_DEFAULT_PERMISSIONS[newUserForm.role],
@@ -187,12 +204,55 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
       name: '',
       email: '',
       password: '',
-      role: 'buyer_stylist',
-      roleTitle: 'Compradora de Moda',
+      role: 'seller',
       themePreference: 'system',
     });
     setIsAddingUser(false);
     onShowToast('Novo colaborador cadastrado com sucesso!', 'success');
+  };
+
+  // Start Edit User
+  const handleStartEditUser = (u: SystemUser) => {
+    setEditingUserId(u.id);
+    setEditUserForm({
+      name: u.name,
+      email: u.email,
+      password: '',
+      role: u.role,
+      themePreference: u.themePreference || 'system',
+    });
+    setIsEditingUser(true);
+    setIsAddingUser(false);
+  };
+
+  // Save Edit User Handler (Admin only)
+  const handleSaveEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAdmin || !editingUserId) {
+      onShowToast('Apenas administradores podem editar usuários.', 'error');
+      return;
+    }
+    if (!editUserForm.name.trim() || !editUserForm.email.trim()) {
+      onShowToast('Preencha nome e email do colaborador.', 'error');
+      return;
+    }
+
+    const payload: Partial<SystemUser> = {
+      name: editUserForm.name.trim(),
+      email: editUserForm.email.trim(),
+      role: editUserForm.role,
+      themePreference: editUserForm.themePreference,
+      customPermissions: ROLE_DEFAULT_PERMISSIONS[editUserForm.role],
+    };
+
+    if (editUserForm.password.trim()) {
+      payload.password = editUserForm.password.trim();
+    }
+
+    await updateUser(editingUserId, payload);
+    setIsEditingUser(false);
+    setEditingUserId(null);
+    onShowToast('Colaborador atualizado com sucesso!', 'success');
   };
 
   return (
@@ -209,7 +269,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             </h1>
           </div>
           <p className="text-xs text-editorial-muted dark:text-stone-400 mt-1">
-            Logado como <strong className="text-editorial-text dark:text-stone-200">{currentUser.name}</strong> ({currentUser.roleTitle}).
+            Logado como <strong className="text-editorial-text dark:text-stone-200">{currentUser.name}</strong> ({getUserRoleLabel(currentUser.role)}).
             {isAdmin && <span className="ml-1 text-brand-700 dark:text-brand-400 font-semibold">• Acesso Administrador</span>}
           </p>
         </div>
@@ -692,7 +752,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             {isAdmin && (
               <button
                 type="button"
-                onClick={() => setIsAddingUser(true)}
+                onClick={() => {
+                  setIsAddingUser(true);
+                  setIsEditingUser(false);
+                }}
                 className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center space-x-1 shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -706,12 +769,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-300 flex items-center space-x-2">
               <Lock className="w-4 h-4 text-amber-700 dark:text-amber-400 flex-shrink-0" />
               <span>
-                Seu perfil atual é <strong>{currentUser.roleTitle}</strong>. Para criar novos usuários, alterar senhas ou permissões, faça login com uma conta <strong>Admin</strong>.
+                Seu perfil atual é <strong>{getUserRoleLabel(currentUser.role)}</strong>. Para criar novos usuários, alterar senhas ou permissões, faça login com uma conta <strong>Admin</strong>.
               </span>
             </div>
           )}
 
-          {/* Add User Modal (Admin only) */}
+          {/* Add User Form (Admin only) */}
           {isAdmin && isAddingUser && (
             <form onSubmit={handleAddUser} className="p-4 bg-brand-50/60 dark:bg-stone-800 rounded-xl border border-brand-200 dark:border-stone-700 space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-brand-900 dark:text-brand-300 flex items-center space-x-1.5">
@@ -727,7 +790,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Beatriz Lima"
+                    placeholder="Ex: Camila Duarte"
                     value={newUserForm.name}
                     onChange={e => setNewUserForm({ ...newUserForm, name: e.target.value })}
                     className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
@@ -741,7 +804,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                   <input
                     type="email"
                     required
-                    placeholder="beatriz@znkpacking.com.br"
+                    placeholder="camila@znkpacking.com.br"
                     value={newUserForm.email}
                     onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
                     className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
@@ -773,32 +836,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
-                    Nível de Acesso (Cargo)
+                    Nível de Acesso (Cargo) *
                   </label>
                   <select
                     value={newUserForm.role}
                     onChange={e => setNewUserForm({ ...newUserForm, role: e.target.value as UserRole })}
                     className="w-full px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
                   >
-                    <option value="admin">Administrador Geral (Acesso Total)</option>
-                    <option value="buyer_stylist">Comprador / Estilista</option>
-                    <option value="production_manager">Gerente de PCP / Produção</option>
-                    <option value="financial_auditor">Financeiro & Custos</option>
-                    <option value="sales_assistant">Assistente</option>
+                    <option value="admin">Administrador (Admin)</option>
+                    <option value="seller">Vendedor (a)</option>
+                    <option value="stockist">Estoquista</option>
                   </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
-                    Título de Exibição
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Estilista Pleno"
-                    value={newUserForm.roleTitle}
-                    onChange={e => setNewUserForm({ ...newUserForm, roleTitle: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
-                  />
                 </div>
 
                 <div className="space-y-1">
@@ -835,11 +883,122 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
             </form>
           )}
 
+          {/* Edit User Form (Admin only) */}
+          {isAdmin && isEditingUser && (
+            <form onSubmit={handleSaveEditUser} className="p-4 bg-amber-50/60 dark:bg-stone-800 rounded-xl border border-amber-300 dark:border-amber-800/60 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center space-x-1.5">
+                <Pencil className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+                <span>Editar Dados do Colaborador</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Nome Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editUserForm.name}
+                    onChange={e => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Email de Acesso *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={editUserForm.email}
+                    onChange={e => setEditUserForm({ ...editUserForm, email: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Nova Senha (Opcional)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showEditPassword ? 'text' : 'password'}
+                      placeholder="Deixe em branco para manter a atual"
+                      value={editUserForm.password}
+                      onChange={e => setEditUserForm({ ...editUserForm, password: e.target.value })}
+                      className="w-full pl-3 pr-8 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 placeholder:text-[10px]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPassword(!showEditPassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      {showEditPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Nível de Acesso (Cargo) *
+                  </label>
+                  <select
+                    value={editUserForm.role}
+                    onChange={e => setEditUserForm({ ...editUserForm, role: e.target.value as UserRole })}
+                    className="w-full px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
+                  >
+                    <option value="admin">Administrador (Admin)</option>
+                    <option value="seller">Vendedor (a)</option>
+                    <option value="stockist">Estoquista</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-editorial-text dark:text-stone-200">
+                    Tema Preferencial
+                  </label>
+                  <select
+                    value={editUserForm.themePreference}
+                    onChange={e => setEditUserForm({ ...editUserForm, themePreference: e.target.value as ThemeMode })}
+                    className="w-full px-2 py-1.5 bg-white dark:bg-stone-900 border border-brand-200 dark:border-stone-700 rounded-md text-xs text-stone-900 dark:text-stone-100 cursor-pointer"
+                  >
+                    <option value="system">Sincronizar com Sistema</option>
+                    <option value="light">Modo Claro</option>
+                    <option value="dark">Modo Escuro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2 border-t border-amber-200 dark:border-stone-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingUser(false);
+                    setEditingUserId(null);
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 text-xs font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs"
+                >
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
+          )}
+
           {/* Users List */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {users.map(u => {
               const isCurrent = currentUser.id === u.id;
               const isUserAdmin = u.role === 'admin';
+              const isSeller = u.role === 'seller';
+              const isStockist = u.role === 'stockist';
 
               return (
                 <div
@@ -864,6 +1023,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                             Admin
                           </span>
                         )}
+                        {isSeller && (
+                          <span className="px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-300 text-[9px] font-bold border border-rose-300 dark:border-rose-800">
+                            Vendedor (a)
+                          </span>
+                        )}
+                        {isStockist && (
+                          <span className="px-1.5 py-0.2 rounded bg-sky-100 dark:bg-sky-950/60 text-sky-900 dark:text-sky-300 text-[9px] font-bold border border-sky-300 dark:border-sky-800">
+                            Estoquista
+                          </span>
+                        )}
                         {isCurrent && (
                           <span className="px-1.5 py-0.2 rounded bg-brand-600 text-white text-[9px] font-bold">
                             Você
@@ -871,12 +1040,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                         )}
                       </div>
                       <p className="text-[11px] text-editorial-muted dark:text-stone-400 truncate">
-                        {u.roleTitle} • {u.email}
+                        {getUserRoleLabel(u.role)} • {u.email}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-1.5 flex-shrink-0">
+                  <div className="flex items-center space-x-1 flex-shrink-0">
+                    {/* Admin Edit Action */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleStartEditUser(u)}
+                        className="p-1.5 rounded text-stone-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                        title="Editar Usuário"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
                     {/* Admin Delete Action */}
                     {isAdmin && users.length > 1 && !isCurrent && (
                       <button

@@ -380,7 +380,6 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
         email: 'admin@znkpacking.com.br',
         password: 'admin',
         role: 'admin',
-        roleTitle: 'Diretora & Administradora Geral',
       };
 
       setCurrentUserState(activeAdmin);
