@@ -183,24 +183,21 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return DEFAULT_LAYOUT_SETTINGS;
   });
 
-  // Helper to merge cloud users with default fallback permissions
+  // Helper to map cloud users with default fallback permissions without reviving deleted users
   const mergeUsers = (cloudUsers: SystemUser[]) => {
-    const map = new Map<string, SystemUser>();
-    
-    // Seed defaults first
-    DEFAULT_USERS.forEach(u => map.set(u.email.toLowerCase(), u));
-    
-    // Override with cloud data
-    cloudUsers.forEach(u => {
-      const existing = map.get(u.email.toLowerCase());
-      map.set(u.email.toLowerCase(), {
-        ...existing,
-        ...u,
-        customPermissions: existing?.customPermissions || ROLE_DEFAULT_PERMISSIONS[u.role] || [],
-      });
-    });
+    if (!cloudUsers || cloudUsers.length === 0) {
+      return DEFAULT_USERS;
+    }
 
-    return Array.from(map.values());
+    return cloudUsers.map(u => {
+      const defaultMatch = DEFAULT_USERS.find(
+        du => du.id === u.id || du.email.toLowerCase() === u.email.toLowerCase()
+      );
+      return {
+        ...u,
+        customPermissions: u.customPermissions || defaultMatch?.customPermissions || ROLE_DEFAULT_PERMISSIONS[u.role] || [],
+      };
+    });
   };
 
   // Load latest store settings, categories, and users from Supabase
@@ -222,7 +219,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
         localStorage.setItem('znk_categories', JSON.stringify(cloudCats));
       }
 
-      if (cloudUsers && cloudUsers.length > 0) {
+      if (cloudUsers !== null) {
         const merged = mergeUsers(cloudUsers);
         setUsers(merged);
         localStorage.setItem('znk_users', JSON.stringify(merged));
@@ -261,14 +258,17 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     });
 
-    const unsubUsers = subscribeToUsers(() => {
-      fetchUsersFromSupabase().then(res => {
-        if (res && res.length > 0) {
-          const merged = mergeUsers(res);
+    const unsubUsers = subscribeToUsers(async () => {
+      try {
+        const fresh = await fetchUsersFromSupabase();
+        if (fresh !== null) {
+          const merged = mergeUsers(fresh);
           setUsers(merged);
           localStorage.setItem('znk_users', JSON.stringify(merged));
         }
-      });
+      } catch (e) {
+        console.warn('Realtime users sync error:', e);
+      }
     });
 
     // Multi-device active tab focus listener
@@ -489,6 +489,11 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       return updated;
     });
     await deleteCategoryFromSupabase(id);
+    const freshCats = await fetchCategoriesFromSupabase();
+    if (freshCats !== null) {
+      setCategories(freshCats);
+      localStorage.setItem('znk_categories', JSON.stringify(freshCats));
+    }
   };
 
   const resetCategories = () => {
@@ -570,18 +575,26 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     if (users.length <= 1) return;
-    setUsers(prev => {
-      const updated = prev.filter(u => u.id !== id);
-      localStorage.setItem('znk_users', JSON.stringify(updated));
-      return updated;
-    });
+
+    // 1. Immediate optimistic UI update
+    const remaining = users.filter(u => u.id !== id);
+    setUsers(remaining);
+    localStorage.setItem('znk_users', JSON.stringify(remaining));
 
     if (currentUser.id === id) {
-      const remaining = users.filter(u => u.id !== id);
       if (remaining.length > 0) setCurrentUser(remaining[0]);
     }
 
+    // 2. Persist deletion in database
     await deleteUserFromSupabase(id);
+
+    // 3. Immediately re-fetch from database to guarantee synchronization
+    const freshUsers = await fetchUsersFromSupabase();
+    if (freshUsers !== null) {
+      const merged = mergeUsers(freshUsers);
+      setUsers(merged);
+      localStorage.setItem('znk_users', JSON.stringify(merged));
+    }
   };
 
   // Layout Settings Persist

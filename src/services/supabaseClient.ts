@@ -184,15 +184,31 @@ export async function deleteUserFromSupabase(userId: string): Promise<boolean> {
   if (!supabase) return false;
 
   try {
+    // 1. Try hard delete first
     const { error } = await supabase
       .from('users')
       .delete()
       .eq('id', userId);
 
-    if (error) {
-      console.error('[Supabase] Error deleting user:', error.message);
+    if (!error) {
+      return true;
+    }
+
+    // 2. If restricted by foreign keys (e.g. user created orders), soft delete
+    console.warn('[Supabase] Hard delete restricted by foreign key, applying soft delete (is_active = false):', error.message);
+    const { error: softErr } = await supabase
+      .from('users')
+      .update({
+        is_active: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (softErr) {
+      console.error('[Supabase] Error soft deleting user:', softErr.message);
       return false;
     }
+
     return true;
   } catch (err) {
     console.error('[Supabase] Exception deleting user:', err);
@@ -315,15 +331,31 @@ export async function deleteSupplierFromSupabase(supplierId: string): Promise<bo
   if (!supabase) return false;
 
   try {
+    // 1. Try hard delete first
     const { error } = await supabase
       .from('suppliers')
       .delete()
       .eq('id', supplierId);
 
-    if (error) {
-      console.error('[Supabase] Error deleting supplier:', error.message);
+    if (!error) {
+      return true;
+    }
+
+    // 2. If restricted by foreign keys (supplier has purchase orders), perform soft delete (is_active = false)
+    console.warn('[Supabase] Hard delete supplier restricted by foreign keys, applying soft delete (is_active = false):', error.message);
+    const { error: softErr } = await supabase
+      .from('suppliers')
+      .update({
+        is_active: false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', supplierId);
+
+    if (softErr) {
+      console.error('[Supabase] Error soft deleting supplier:', softErr.message);
       return false;
     }
+
     return true;
   } catch (err) {
     console.error('[Supabase] Exception deleting supplier:', err);
@@ -633,6 +665,13 @@ export async function deleteOrderFromSupabase(orderId: string): Promise<boolean>
   if (!supabase) return false;
 
   try {
+    // 1. Delete associated items first
+    await supabase
+      .from('purchase_order_items')
+      .delete()
+      .eq('purchase_order_id', orderId);
+
+    // 2. Delete order header
     const { error } = await supabase
       .from('purchase_orders')
       .delete()
@@ -802,15 +841,30 @@ export async function deleteCategoryFromSupabase(categoryId: string): Promise<bo
   if (!supabase) return false;
 
   try {
+    // 1. Try hard delete first
     const { error } = await supabase
       .from('categories')
       .delete()
       .eq('id', categoryId);
 
-    if (error) {
-      console.error('[Supabase] Error deleting category:', error.message);
+    if (!error) {
+      return true;
+    }
+
+    // 2. If restricted by foreign keys, soft delete
+    console.warn('[Supabase] Hard delete category restricted by relations, applying soft delete (is_active = false):', error.message);
+    const { error: softErr } = await supabase
+      .from('categories')
+      .update({
+        is_active: false
+      })
+      .eq('id', categoryId);
+
+    if (softErr) {
+      console.error('[Supabase] Error soft deleting category:', softErr.message);
       return false;
     }
+
     return true;
   } catch (err) {
     console.error('[Supabase] Exception deleting category:', err);

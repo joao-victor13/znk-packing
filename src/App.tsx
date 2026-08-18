@@ -251,6 +251,11 @@ function AppContent() {
     setOrders(prev => prev.filter(o => o.id !== orderId));
     showToast('Pedido excluído com sucesso.', 'info');
     await deleteOrderFromSupabase(orderId);
+    const freshOrders = await fetchOrdersFromSupabase();
+    if (freshOrders !== null) {
+      setOrders(freshOrders);
+      localStorage.setItem('znk_fashion_orders', JSON.stringify(freshOrders));
+    }
   };
 
   // Quick Status Update
@@ -302,6 +307,11 @@ function AppContent() {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
     showToast('Fornecedor removido com sucesso.', 'info');
     await deleteSupplierFromSupabase(supplierId);
+    const freshSuppliers = await fetchSuppliersFromSupabase();
+    if (freshSuppliers !== null) {
+      setSuppliers(freshSuppliers);
+      localStorage.setItem('znk_fashion_suppliers', JSON.stringify(freshSuppliers));
+    }
   };
 
   // If user is not authenticated, show login screen (Hooks already called above safely)

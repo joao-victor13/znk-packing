@@ -179,71 +179,33 @@ export const LoginView: React.FC = () => {
           </form>
 
           {/* Quick 1-Click Access for Team Demonstration */}
-          <div className="mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
-            <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-editorial-muted dark:text-stone-400 mb-2.5">
-              <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-              <span>Acesso Rápido por Perfil:</span>
+          {users && users.length > 0 && (
+            <div className="mt-6 pt-5 border-t border-stone-100 dark:border-stone-800">
+              <div className="flex items-center space-x-1.5 text-[11px] font-semibold text-editorial-muted dark:text-stone-400 mb-2.5">
+                <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                <span>Acesso Rápido por Perfil:</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                {users.slice(0, 4).map(u => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => handleQuickLogin(u.email, u.password || '123456')}
+                    className="p-2 rounded-lg bg-stone-50 dark:bg-stone-800/80 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 text-left transition-colors truncate"
+                  >
+                    <div className="font-bold text-stone-800 dark:text-stone-200 flex items-center space-x-1">
+                      {u.role === 'admin' && <ShieldCheck className="w-3 h-3 text-brand-600 dark:text-brand-400" />}
+                      <span className="truncate">{u.name}</span>
+                    </div>
+                    <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
+                      {u.email}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-              {/* Admin */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@znkpacking.com.br', 'admin')}
-                className="p-2 rounded-lg bg-brand-50/70 dark:bg-stone-800/80 hover:bg-brand-100 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-700 text-left transition-colors truncate"
-              >
-                <div className="font-bold text-brand-900 dark:text-brand-300 flex items-center space-x-1">
-                  <ShieldCheck className="w-3 h-3 text-brand-600 dark:text-brand-400" />
-                  <span>Admin</span>
-                </div>
-                <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
-                  admin@znkpacking.com.br
-                </div>
-              </button>
-
-              {/* Compradora */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('camila.duarte@znkpacking.com.br', 'compras123')}
-                className="p-2 rounded-lg bg-stone-50 dark:bg-stone-800/80 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 text-left transition-colors truncate"
-              >
-                <div className="font-bold text-stone-800 dark:text-stone-200">
-                  Compradora
-                </div>
-                <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
-                  camila.duarte@...
-                </div>
-              </button>
-
-              {/* Gerente PCP */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('rodrigo.pcp@znkpacking.com.br', 'pcp123')}
-                className="p-2 rounded-lg bg-stone-50 dark:bg-stone-800/80 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 text-left transition-colors truncate"
-              >
-                <div className="font-bold text-stone-800 dark:text-stone-200">
-                  Gerente PCP
-                </div>
-                <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
-                  rodrigo.pcp@...
-                </div>
-              </button>
-
-              {/* Financeiro */}
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('financeiro@znkpacking.com.br', 'fin123')}
-                className="p-2 rounded-lg bg-stone-50 dark:bg-stone-800/80 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 text-left transition-colors truncate"
-              >
-                <div className="font-bold text-stone-800 dark:text-stone-200">
-                  Financeiro
-                </div>
-                <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
-                  financeiro@...
-                </div>
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer info */}
