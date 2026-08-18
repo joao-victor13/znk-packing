@@ -5,10 +5,13 @@ import {
   Supplier, 
   OrderStatus, 
   StoreSettings, 
-  CategoryItem 
+  CategoryItem,
+  SystemUser,
+  UserRole
 } from '../types';
+import { DEFAULT_USERS } from '../data/initialCustomization';
 
-// Read Vite environment variables safely
+// Read Vite environment variables safely with rock-solid fallback
 const env = (import.meta as any).env || {};
 const supabaseUrl = env.VITE_SUPABASE_URL || 'https://hwtgofjeglrmbykegsru.supabase.co';
 const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dGdvZmplZ2xybWJ5a2Vnc3J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5ODUyMTcsImV4cCI6MjEwMjU2MTIxN30.49X4mObYjmK3XCOOQbLnCNEapbunANeCf3AWhO7GA3A';
@@ -16,11 +19,22 @@ const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5c
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    })
   : null;
 
 // Default admin UUID in PostgreSQL seed
 export const DEFAULT_USER_UUID = 'a0000000-0000-0000-0000-000000000001';
+export const DEFAULT_SUPPLIER_UUID = 'b0000000-0000-0000-0000-000000000001';
 
 // Helper to check if string is a valid UUID
 export function isUuid(str?: string): boolean {
@@ -53,6 +67,139 @@ function fromDbStatus(status: string): OrderStatus {
   }
 }
 
+// Role conversions
+export function toDbRole(role?: UserRole): string {
+  switch (role) {
+    case 'admin': return 'ADMIN';
+    case 'buyer_stylist': return 'BUYER';
+    case 'production_manager': return 'PRODUCTION_MANAGER';
+    case 'financial_auditor': return 'FINANCE';
+    case 'sales_assistant': return 'VIEWER';
+    default: return 'BUYER';
+  }
+}
+
+export function fromDbRole(role?: string): UserRole {
+  switch (role?.toUpperCase()) {
+    case 'ADMIN': return 'admin';
+    case 'BUYER': return 'buyer_stylist';
+    case 'PRODUCTION_MANAGER': return 'production_manager';
+    case 'FINANCE': return 'financial_auditor';
+    case 'VIEWER': return 'sales_assistant';
+    default: return 'buyer_stylist';
+  }
+}
+
+// -----------------------------------------------------------------------------
+// USERS SERVICE (MULTI-DEVICE AUTH & USER MANAGEMENT)
+// -----------------------------------------------------------------------------
+
+export async function fetchUsersFromSupabase(): Promise<SystemUser[] | null> {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.warn('[Supabase] Failed to fetch users:', error.message);
+      return null;
+    }
+
+    if (!data || data.length === 0) return [];
+
+    return data.map((row: any) => {
+      const defaultMatch = DEFAULT_USERS.find(
+        du => du.id === row.id || du.email.toLowerCase() === row.email.toLowerCase()
+      );
+
+      return {
+        id: row.id,
+        name: row.name || 'Colaborador',
+        email: row.email,
+        password: row.password_hash || defaultMatch?.password || '123456',
+        avatarBg: defaultMatch?.avatarBg || 'bg-brand-600',
+        role: fromDbRole(row.role),
+        roleTitle: row.role_title || defaultMatch?.roleTitle || 'Colaborador',
+        themePreference: defaultMatch?.themePreference || 'system',
+        customPermissions: defaultMatch?.customPermissions,
+      };
+    });
+  } catch (err) {
+    console.error('[Supabase] Exception fetching users:', err);
+    return null;
+  }
+}
+
+export async function saveUserToSupabase(user: SystemUser): Promise<SystemUser | null> {
+  if (!supabase) return null;
+
+  try {
+    const payload: any = {
+      name: user.name,
+      email: user.email.toLowerCase().trim(),
+      password_hash: user.password || '123456',
+      role: toDbRole(user.role),
+      role_title: user.roleTitle,
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isUuid(user.id)) {
+      payload.id = user.id;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .upsert(payload, { onConflict: 'email' })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[Supabase] Error saving user:', error.message);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      password: data.password_hash || user.password,
+      avatarBg: user.avatarBg || 'bg-brand-600',
+      role: fromDbRole(data.role),
+      roleTitle: data.role_title,
+      themePreference: user.themePreference || 'system',
+      customPermissions: user.customPermissions,
+    };
+  } catch (err) {
+    console.error('[Supabase] Exception saving user:', err);
+    return null;
+  }
+}
+
+export async function deleteUserFromSupabase(userId: string): Promise<boolean> {
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (error) {
+      console.error('[Supabase] Error deleting user:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[Supabase] Exception deleting user:', err);
+    return false;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // SUPPLIERS SERVICE
 // -----------------------------------------------------------------------------
@@ -64,6 +211,7 @@ export async function fetchSuppliersFromSupabase(): Promise<Supplier[] | null> {
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -118,6 +266,7 @@ export async function saveSupplierToSupabase(supplier: Supplier): Promise<Suppli
       default_payment_terms: supplier.defaultPaymentTerms || supplier.paymentTerms || '30 DDL',
       average_lead_days: Number(supplier.averageLeadDays) || 15,
       rating: Number(supplier.rating) || 5.0,
+      is_active: true,
       notes: supplier.notes || '',
       updated_at: new Date().toISOString(),
     };
@@ -207,6 +356,7 @@ export async function fetchOrdersFromSupabase(): Promise<PurchaseOrder[] | null>
           id,
           sku,
           description,
+          category_id,
           size_grid_type,
           size,
           color,
@@ -233,7 +383,7 @@ export async function fetchOrdersFromSupabase(): Promise<PurchaseOrder[] | null>
         id: item.id,
         sku: item.sku,
         description: item.description,
-        category: 'Confecção',
+        category: 'Vestidos', // Standard fallback category
         sizeGridType: item.size_grid_type || 'letter',
         size: item.size,
         color: item.color,
@@ -282,12 +432,35 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
   if (!supabase) return null;
 
   try {
-    const validUserId = isUuid(userId) ? userId : DEFAULT_USER_UUID;
+    // 1. Ensure user_id exists in Supabase users table to prevent Foreign Key Violation (Error 23503)
+    let validUserId = DEFAULT_USER_UUID;
+    if (isUuid(userId)) {
+      const { data: userCheck } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .limit(1);
+
+      if (userCheck && userCheck.length > 0) {
+        validUserId = userCheck[0].id;
+      }
+    }
+
     const orderDbId = isUuid(order.id) ? order.id : undefined;
 
-    // Validate supplier_id
-    let validSupplierId = order.supplierId;
-    if (!isUuid(validSupplierId)) {
+    // 2. Validate supplier_id exists in Supabase
+    let validSupplierId = DEFAULT_SUPPLIER_UUID;
+    if (isUuid(order.supplierId)) {
+      const { data: supCheck } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('id', order.supplierId)
+        .limit(1);
+
+      if (supCheck && supCheck.length > 0) {
+        validSupplierId = supCheck[0].id;
+      }
+    } else {
       // Look up supplier by CNPJ or name if possible
       const { data: foundSup } = await supabase
         .from('suppliers')
@@ -299,11 +472,11 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
         validSupplierId = foundSup[0].id;
       } else {
         const { data: firstSup } = await supabase.from('suppliers').select('id').limit(1);
-        validSupplierId = firstSup?.[0]?.id || 'b0000000-0000-0000-0000-000000000001';
+        validSupplierId = firstSup?.[0]?.id || DEFAULT_SUPPLIER_UUID;
       }
     }
 
-    // 1. Upsert order header with user_id
+    // 3. Upsert order header
     const orderPayload: any = {
       order_number: order.orderNumber,
       supplier_id: validSupplierId,
@@ -351,13 +524,12 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
 
     const finalOrderId = savedOrder.id;
 
-    // 2. Delete existing items for clean replacement
+    // 4. Clean replace items
     await supabase
       .from('purchase_order_items')
       .delete()
       .eq('purchase_order_id', finalOrderId);
 
-    // 3. Insert items
     let savedItems: OrderItem[] = [];
     if (order.items && order.items.length > 0) {
       const itemsPayload = order.items.map(item => ({
@@ -387,7 +559,7 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
           id: item.id,
           sku: item.sku,
           description: item.description,
-          category: 'Confecção',
+          category: item.description || 'Vestidos',
           sizeGridType: item.size_grid_type || 'letter',
           size: item.size,
           color: item.color,
@@ -488,24 +660,25 @@ export async function fetchStoreSettingsFromSupabase(): Promise<StoreSettings | 
     const { data, error } = await supabase
       .from('store_settings')
       .select('*')
+      .order('updated_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
 
     return {
       storeName: data.brand_name || 'ZNK Packing',
-      tagline: data.brand_slogan || 'Moda Feminina & Alta Confecção',
-      legalName: data.legal_name || 'ZNK Comercio de Vestuario LTDA',
-      cnpj: data.cnpj || '48.912.345/0001-89',
+      tagline: data.brand_slogan || 'Gestão de Pedidos de Compra & Confecção Feminina',
+      legalName: data.legal_name || 'ZNK Packing Comércio & Confecção de Roupas Femininas Ltda',
+      cnpj: data.cnpj || '42.190.876/0001-33',
       email: data.purchasing_email || 'compras@znkpacking.com.br',
-      phone: data.whatsapp_business || '(11) 98765-4321',
+      phone: data.whatsapp_business || '(11) 97654-3210',
       address: data.showroom_address || 'Rua Oscar Freire, 1420 - Jardins',
       city: data.city || 'São Paulo',
       state: data.state || 'SP',
       currencySymbol: data.currency_symbol || 'R$',
-      footerNote: data.legal_footer_notes || 'Ordem de compra sujeita aos termos de controle de qualidade e prazos acordados.',
-      logoIcon: 'Sparkles',
+      footerNote: data.legal_footer_notes || 'Ordem de Compra oficial ZNK Packing - Sujeita aos termos e controle de qualidade.',
+      logoIcon: 'Package',
     };
   } catch (err) {
     console.error('[Supabase] Exception fetching store settings:', err);
@@ -551,6 +724,14 @@ export async function saveStoreSettingsToSupabase(settings: StoreSettings): Prom
 // CATEGORIES SERVICE
 // -----------------------------------------------------------------------------
 
+// Clean badge styling to ensure length < 30 chars for PostgreSQL VARCHAR(30)
+function cleanBadgeStyle(str?: string, defaultVal: string = ''): string {
+  if (!str) return defaultVal;
+  // Take first clean class name before dark mode or truncate safely to 28 chars
+  const first = str.split(' ')[0];
+  return first.length <= 30 ? first : str.substring(0, 30);
+}
+
 export async function fetchCategoriesFromSupabase(): Promise<CategoryItem[] | null> {
   if (!supabase) return null;
 
@@ -566,9 +747,9 @@ export async function fetchCategoriesFromSupabase(): Promise<CategoryItem[] | nu
     return data.map((row: any) => ({
       id: row.id,
       name: row.name,
-      badgeBg: row.badge_bg || 'bg-stone-100 dark:bg-stone-800/40',
-      badgeText: row.badge_text || 'text-stone-800 dark:text-stone-300',
-      badgeBorder: row.badge_border || 'border-stone-200 dark:border-stone-700/40',
+      badgeBg: row.badge_bg || 'bg-stone-100',
+      badgeText: row.badge_text || 'text-stone-800',
+      badgeBorder: row.badge_border || 'border-stone-200',
     }));
   } catch (err) {
     console.error('[Supabase] Exception fetching categories:', err);
@@ -584,9 +765,9 @@ export async function saveCategoryToSupabase(cat: CategoryItem): Promise<Categor
     const payload: any = {
       name: cat.name,
       slug: slug || `cat-${Date.now()}`,
-      badge_bg: cat.badgeBg,
-      badge_text: cat.badgeText,
-      badge_border: cat.badgeBorder,
+      badge_bg: cleanBadgeStyle(cat.badgeBg, 'bg-stone-100'),
+      badge_text: cleanBadgeStyle(cat.badgeText, 'text-stone-800'),
+      badge_border: cleanBadgeStyle(cat.badgeBorder, 'border-stone-200'),
       is_active: true,
     };
     if (isUuid(cat.id)) {
@@ -674,3 +855,47 @@ export function subscribeToSuppliers(callback: () => void) {
   };
 }
 
+export function subscribeToUsers(callback: () => void) {
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel('realtime_users_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+      callback();
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeToStoreSettings(callback: () => void) {
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel('realtime_store_settings_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, () => {
+      callback();
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeToCategories(callback: () => void) {
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel('realtime_categories_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+      callback();
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}

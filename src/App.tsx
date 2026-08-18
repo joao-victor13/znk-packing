@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { DashboardStats } from './components/DashboardStats';
 import { FilterBar } from './components/FilterBar';
@@ -36,7 +36,7 @@ import {
 } from './services/supabaseClient';
 
 function AppContent() {
-  const { layoutSettings, isAuthenticated, currentUser } = useCustomization();
+  const { layoutSettings, isAuthenticated, currentUser, refreshCustomization } = useCustomization();
 
   // 1. Storage-backed state for Orders
   const [orders, setOrders] = useState<PurchaseOrder[]>(() => {
@@ -66,34 +66,38 @@ function AppContent() {
     return INITIAL_SUPPLIERS;
   });
 
-  // Load latest data from Supabase on mount
-  useEffect(() => {
-    async function loadCloudData() {
-      try {
-        const [cloudSuppliers, cloudOrders] = await Promise.all([
-          fetchSuppliersFromSupabase(),
-          fetchOrdersFromSupabase()
-        ]);
+  // Synchronization with Supabase Database (Source of Truth)
+  const syncCloudData = useCallback(async () => {
+    try {
+      const [cloudSuppliers, cloudOrders] = await Promise.all([
+        fetchSuppliersFromSupabase(),
+        fetchOrdersFromSupabase()
+      ]);
 
-        if (cloudSuppliers && cloudSuppliers.length > 0) {
-          setSuppliers(cloudSuppliers);
-          localStorage.setItem('znk_fashion_suppliers', JSON.stringify(cloudSuppliers));
-        }
-        if (cloudOrders && cloudOrders.length > 0) {
-          setOrders(cloudOrders);
-          localStorage.setItem('znk_fashion_orders', JSON.stringify(cloudOrders));
-        }
-      } catch (err) {
-        console.warn('Could not sync with Supabase on load, using local cache', err);
+      if (cloudSuppliers !== null) {
+        setSuppliers(cloudSuppliers);
+        localStorage.setItem('znk_fashion_suppliers', JSON.stringify(cloudSuppliers));
       }
-    }
-    loadCloudData();
 
-    // Multi-device & multi-network realtime subscription
+      if (cloudOrders !== null) {
+        setOrders(cloudOrders);
+        localStorage.setItem('znk_fashion_orders', JSON.stringify(cloudOrders));
+      }
+    } catch (err) {
+      console.warn('Could not sync with Supabase, using local cache', err);
+    }
+  }, []);
+
+  // Multi-device & multi-network realtime subscription + auto-polling on focus
+  useEffect(() => {
+    // Initial sync
+    syncCloudData();
+
+    // 1. Realtime websockets listeners
     const unsubOrders = subscribeToOrders(async () => {
       try {
         const freshOrders = await fetchOrdersFromSupabase();
-        if (freshOrders && freshOrders.length > 0) {
+        if (freshOrders !== null) {
           setOrders(freshOrders);
           localStorage.setItem('znk_fashion_orders', JSON.stringify(freshOrders));
         }
@@ -105,7 +109,7 @@ function AppContent() {
     const unsubSuppliers = subscribeToSuppliers(async () => {
       try {
         const freshSuppliers = await fetchSuppliersFromSupabase();
-        if (freshSuppliers && freshSuppliers.length > 0) {
+        if (freshSuppliers !== null) {
           setSuppliers(freshSuppliers);
           localStorage.setItem('znk_fashion_suppliers', JSON.stringify(freshSuppliers));
         }
@@ -114,28 +118,34 @@ function AppContent() {
       }
     });
 
+    // 2. Active Tab Focus & Visibility listeners (re-syncs immediately when user switches tabs or wakes up mobile phone)
+    const handleFocus = () => {
+      syncCloudData();
+      refreshCustomization();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncCloudData();
+        refreshCustomization();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // 3. Periodic background sync interval (every 12 seconds)
+    const syncInterval = setInterval(() => {
+      syncCloudData();
+    }, 12000);
+
     return () => {
       unsubOrders();
       unsubSuppliers();
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(syncInterval);
     };
-  }, []);
-
-  // Save to localStorage when state changes
-  useEffect(() => {
-    try {
-      localStorage.setItem('znk_fashion_orders', JSON.stringify(orders));
-    } catch (e) {
-      console.error('Failed to save orders', e);
-    }
-  }, [orders]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('znk_fashion_suppliers', JSON.stringify(suppliers));
-    } catch (e) {
-      console.error('Failed to save suppliers', e);
-    }
-  }, [suppliers]);
+  }, [syncCloudData, refreshCustomization]);
 
   // Views & Modals state
   const [activeView, setActiveView] = useState<'list' | 'editor' | 'suppliers' | 'settings'>('list');

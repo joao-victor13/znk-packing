@@ -67,6 +67,19 @@ O **ZNK Packing** é um ERP e sistema de gestão de compras, confecção e relac
 * **Senhas por Usuário:** Cada usuário possui sua senha salva no estado/banco.
 * **Proteção Admin:** Apenas usuários com o cargo **`admin`** podem acessar a área de criação/exclusão de usuários e alterar dados fiscais da loja em [`src/components/SettingsView.tsx`](./src/components/SettingsView.tsx).
 
+### 2.8. Correção de Divergência de Dados entre Aparelhos / Sessões (Cloud-First Sync)
+* **Diagnóstico das Causas de Divergência:**
+  1. *Erro de Foreign Key (`users_pkey` / `user_id_fkey`):* Usuários criados localmente não existiam na tabela `users` do Supabase, o que fazia com que pedidos criados fossem rejeitados pelo banco e ficassem presos apenas no `localStorage` do aparelho criador.
+  2. *Sincronização Unidirecional de Usuários:* Criação de usuários e troca de senhas ficavam restritas ao `localStorage` local.
+  3. *Múltiplos registros em `store_settings`:* Consulta sem ordenação trazia configurações antigas de demonstração em alguns aparelhos.
+  4. *Estilos de Categorias excedendo limite:* Strings de badges com classes Tailwind ultrapassavam o limite de 30 caracteres da coluna `VARCHAR(30)` no Postgres.
+  5. *Falta de revalidação ao focar na aba:* Aparelhos móveis ou abas em segundo plano mantinham estado desatualizado.
+* **Solução Implementada:**
+  * **Sincronização Universal de Usuários:** Adicionados `fetchUsersFromSupabase`, `saveUserToSupabase` e `deleteUserFromSupabase` no [`supabaseClient.ts`](./src/services/supabaseClient.ts) e integrados ao [`CustomizationContext.tsx`](./src/context/CustomizationContext.tsx).
+  * **Proteção de Foreign Key:** Tratamento preventivo em `saveOrderToSupabase` para garantir que `user_id` e `supplier_id` sempre apontem para UUIDs válidos e existentes no Supabase.
+  * **Sincronização em Foco & Intervalo Periódico:** Event listeners de `window.focus`, `document.visibilitychange` e polling periódico a cada 12 segundos garantem que qualquer aparelho atualize seus dados instantaneamente assim que o usuário retornar à aba ou abrir o aplicativo.
+  * **Realtime Habilitado:** Canais de streaming ativo para `purchase_orders`, `suppliers`, `users`, `categories` e `store_settings`.
+
 ---
 
 ## 3. 👥 Credenciais & Perfis de Usuário

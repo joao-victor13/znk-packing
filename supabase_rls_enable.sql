@@ -61,3 +61,15 @@ CREATE POLICY "Permitir acesso geral de configuracoes" ON "store_settings" FOR A
 -- 6. POLÍTICAS PARA USUÁRIOS (USERS)
 DROP POLICY IF EXISTS "Permitir acesso geral de usuarios" ON "users";
 CREATE POLICY "Permitir acesso geral de usuarios" ON "users" FOR ALL USING (true) WITH CHECK (true);
+
+-- 7. HABILITAR REALTIME (SINCRONIZAÇÃO INSTANTÂNEA MULTI-DISPOSITIVO)
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE purchase_orders;
+    ALTER PUBLICATION supabase_realtime ADD TABLE purchase_order_items;
+    ALTER PUBLICATION supabase_realtime ADD TABLE suppliers;
+    ALTER PUBLICATION supabase_realtime ADD TABLE store_settings;
+    ALTER PUBLICATION supabase_realtime ADD TABLE categories;
+    ALTER PUBLICATION supabase_realtime ADD TABLE users;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+

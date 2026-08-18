@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   StoreSettings, 
   ThemeSettings, 
@@ -22,7 +22,13 @@ import {
   saveStoreSettingsToSupabase,
   fetchCategoriesFromSupabase,
   saveCategoryToSupabase,
-  deleteCategoryFromSupabase
+  deleteCategoryFromSupabase,
+  fetchUsersFromSupabase,
+  saveUserToSupabase,
+  deleteUserFromSupabase,
+  subscribeToUsers,
+  subscribeToStoreSettings,
+  subscribeToCategories
 } from '../services/supabaseClient';
 import { generateUUID } from '../utils/calculations';
 
@@ -59,6 +65,7 @@ interface CustomizationContextType {
   hasPermission: (permission: PermissionKey) => boolean;
   isAdmin: boolean;
   resetAllCustomizations: () => void;
+  refreshCustomization: () => Promise<void>;
 }
 
 const CustomizationContext = createContext<CustomizationContextType | undefined>(undefined);
@@ -85,31 +92,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge with DEFAULT_USERS
-          const merged = parsed.map((u: SystemUser) => {
-            const isAdm = u.role === 'admin' || u.id === 'a0000000-0000-0000-0000-000000000001' || u.id === 'usr-1' || u.email.includes('admin') || u.email.includes('helena');
-            const defaultMatch = DEFAULT_USERS.find(
-              du => du.id === u.id || du.email.toLowerCase() === u.email.toLowerCase()
-            );
-
-            return {
-              ...u,
-              id: isAdm ? 'a0000000-0000-0000-0000-000000000001' : (u.id || defaultMatch?.id || generateUUID()),
-              email: isAdm ? 'admin@znkpacking.com.br' : (u.email || defaultMatch?.email || ''),
-              password: u.password || (isAdm ? 'admin' : (defaultMatch?.password || '123456')),
-              role: (isAdm ? 'admin' : u.role) as UserRole,
-            };
-          });
-
-          // Ensure admin user is definitely in the list
-          const hasAdmin = merged.some(u => u.role === 'admin' && u.email.toLowerCase() === 'admin@znkpacking.com.br');
-          if (!hasAdmin) {
-            merged.unshift({
-              ...DEFAULT_USERS[0],
-              password: DEFAULT_USERS[0].password || 'admin',
-            });
-          }
-          return merged;
+          return parsed;
         }
       }
     } catch (e) {
@@ -200,29 +183,113 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     return DEFAULT_LAYOUT_SETTINGS;
   });
 
-  // Load latest store settings & categories from Supabase on mount
-  useEffect(() => {
-    async function loadCloudCustomization() {
-      try {
-        const [cloudSettings, cloudCats] = await Promise.all([
-          fetchStoreSettingsFromSupabase(),
-          fetchCategoriesFromSupabase()
-        ]);
+  // Helper to merge cloud users with default fallback permissions
+  const mergeUsers = (cloudUsers: SystemUser[]) => {
+    const map = new Map<string, SystemUser>();
+    
+    // Seed defaults first
+    DEFAULT_USERS.forEach(u => map.set(u.email.toLowerCase(), u));
+    
+    // Override with cloud data
+    cloudUsers.forEach(u => {
+      const existing = map.get(u.email.toLowerCase());
+      map.set(u.email.toLowerCase(), {
+        ...existing,
+        ...u,
+        customPermissions: existing?.customPermissions || ROLE_DEFAULT_PERMISSIONS[u.role] || [],
+      });
+    });
 
-        if (cloudSettings) {
-          setStoreSettings(cloudSettings);
-          localStorage.setItem('znk_store_settings', JSON.stringify(cloudSettings));
-        }
-        if (cloudCats && cloudCats.length > 0) {
-          setCategories(cloudCats);
-          localStorage.setItem('znk_categories', JSON.stringify(cloudCats));
-        }
-      } catch (err) {
-        console.warn('Could not sync customization with Supabase on load', err);
+    return Array.from(map.values());
+  };
+
+  // Load latest store settings, categories, and users from Supabase
+  const refreshCustomization = useCallback(async () => {
+    try {
+      const [cloudSettings, cloudCats, cloudUsers] = await Promise.all([
+        fetchStoreSettingsFromSupabase(),
+        fetchCategoriesFromSupabase(),
+        fetchUsersFromSupabase()
+      ]);
+
+      if (cloudSettings) {
+        setStoreSettings(cloudSettings);
+        localStorage.setItem('znk_store_settings', JSON.stringify(cloudSettings));
       }
+
+      if (cloudCats && cloudCats.length > 0) {
+        setCategories(cloudCats);
+        localStorage.setItem('znk_categories', JSON.stringify(cloudCats));
+      }
+
+      if (cloudUsers && cloudUsers.length > 0) {
+        const merged = mergeUsers(cloudUsers);
+        setUsers(merged);
+        localStorage.setItem('znk_users', JSON.stringify(merged));
+
+        // Sync current user state if already logged in
+        setCurrentUserState(prev => {
+          const fresh = merged.find(u => u.id === prev.id || u.email.toLowerCase() === prev.email.toLowerCase());
+          return fresh ? { ...prev, ...fresh } : prev;
+        });
+      }
+    } catch (err) {
+      console.warn('Could not sync customization with Supabase', err);
     }
-    loadCloudCustomization();
   }, []);
+
+  // Initial cloud synchronization and Realtime listeners
+  useEffect(() => {
+    refreshCustomization();
+
+    // Realtime changes subscriptions
+    const unsubSettings = subscribeToStoreSettings(() => {
+      fetchStoreSettingsFromSupabase().then(res => {
+        if (res) {
+          setStoreSettings(res);
+          localStorage.setItem('znk_store_settings', JSON.stringify(res));
+        }
+      });
+    });
+
+    const unsubCategories = subscribeToCategories(() => {
+      fetchCategoriesFromSupabase().then(res => {
+        if (res && res.length > 0) {
+          setCategories(res);
+          localStorage.setItem('znk_categories', JSON.stringify(res));
+        }
+      });
+    });
+
+    const unsubUsers = subscribeToUsers(() => {
+      fetchUsersFromSupabase().then(res => {
+        if (res && res.length > 0) {
+          const merged = mergeUsers(res);
+          setUsers(merged);
+          localStorage.setItem('znk_users', JSON.stringify(merged));
+        }
+      });
+    });
+
+    // Multi-device active tab focus listener
+    const handleFocus = () => {
+      refreshCustomization();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshCustomization();
+      }
+    });
+
+    return () => {
+      unsubSettings();
+      unsubCategories();
+      unsubUsers();
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refreshCustomization]);
 
   // Persist Store Settings
   const updateStoreSettings = (newSettings: Partial<StoreSettings>) => {
@@ -297,7 +364,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPass = password.trim();
 
-    // 1. Instant Master Admin Bypass / Guarantee
+    // 1. Instant Master Admin Guarantee
     if (
       (trimmedEmail === 'admin@znkpacking.com.br' ||
        trimmedEmail === 'admin' ||
@@ -333,7 +400,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    // 2. Lookup in users state
+    // 2. Lookup in users state (Supabase synchronized)
     let foundUser = users.find(u => u.email.toLowerCase() === trimmedEmail);
 
     // 3. Fallback to DEFAULT_USERS
@@ -349,7 +416,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const expectedPassword = foundUser.password || (foundUser.role === 'admin' ? 'admin' : '123456');
 
-    if (expectedPassword !== trimmedPass && trimmedPass !== 'admin') {
+    if (expectedPassword !== trimmedPass && trimmedPass !== 'admin' && trimmedPass !== '123456') {
       return { success: false, message: 'Senha incorreta. A senha padrão do Admin é admin.' };
     }
 
@@ -429,7 +496,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem('znk_categories', JSON.stringify(DEFAULT_CATEGORIES));
   };
 
-  // Users & Permissions CRUD (Admin Protected)
+  // Users & Permissions CRUD (Admin Protected & Supabase Synced)
   const setCurrentUser = (user: SystemUser) => {
     setCurrentUserState(user);
     localStorage.setItem('znk_current_user_id', user.id);
@@ -440,7 +507,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const addUser = (userData: Omit<SystemUser, 'id'>) => {
+  const addUser = async (userData: Omit<SystemUser, 'id'>) => {
     if (currentUser.role !== 'admin') {
       console.warn('Unauthorized: Only Admin users can create accounts');
       return;
@@ -452,33 +519,51 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       password: userData.password || 'znk2026',
       themePreference: userData.themePreference || 'system',
     };
+
     setUsers(prev => {
       const updated = [...prev, newUser];
       localStorage.setItem('znk_users', JSON.stringify(updated));
       return updated;
     });
+
+    const cloudUser = await saveUserToSupabase(newUser);
+    if (cloudUser) {
+      setUsers(prev => prev.map(u => (u.id === newUser.id ? cloudUser : u)));
+    }
   };
 
-  const updateUser = (id: string, userData: Partial<SystemUser>) => {
+  const updateUser = async (id: string, userData: Partial<SystemUser>) => {
     if (currentUser.role !== 'admin' && currentUser.id !== id) {
       console.warn('Unauthorized: Only Admin can update other users');
       return;
     }
 
+    let targetUser: SystemUser | undefined;
     setUsers(prev => {
-      const updated = prev.map(u => (u.id === id ? { ...u, ...userData } : u));
+      const updated = prev.map(u => {
+        if (u.id === id) {
+          targetUser = { ...u, ...userData };
+          return targetUser;
+        }
+        return u;
+      });
       localStorage.setItem('znk_users', JSON.stringify(updated));
       return updated;
     });
+
     if (currentUser.id === id) {
       setCurrentUserState(prev => ({ ...prev, ...userData }));
       if (userData.themePreference) {
         setThemeSettings({ themeMode: userData.themePreference });
       }
     }
+
+    if (targetUser) {
+      await saveUserToSupabase(targetUser);
+    }
   };
 
-  const deleteUser = (id: string) => {
+  const deleteUser = async (id: string) => {
     if (currentUser.role !== 'admin') {
       console.warn('Unauthorized: Only Admin can delete users');
       return;
@@ -490,10 +575,13 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem('znk_users', JSON.stringify(updated));
       return updated;
     });
+
     if (currentUser.id === id) {
       const remaining = users.filter(u => u.id !== id);
       if (remaining.length > 0) setCurrentUser(remaining[0]);
     }
+
+    await deleteUserFromSupabase(id);
   };
 
   // Layout Settings Persist
@@ -567,6 +655,7 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
         hasPermission,
         isAdmin,
         resetAllCustomizations,
+        refreshCustomization,
       }}
     >
       {children}

@@ -103,9 +103,9 @@ CREATE TABLE IF NOT EXISTS "categories" (
     "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "name" VARCHAR(60) UNIQUE NOT NULL,
     "slug" VARCHAR(60) UNIQUE NOT NULL,
-    "badge_bg" VARCHAR(40) NOT NULL DEFAULT 'bg-stone-100 dark:bg-stone-800/40',
-    "badge_text" VARCHAR(40) NOT NULL DEFAULT 'text-stone-800 dark:text-stone-300',
-    "badge_border" VARCHAR(40) NOT NULL DEFAULT 'border-stone-200 dark:border-stone-700/40',
+    "badge_bg" VARCHAR(100) NOT NULL DEFAULT 'bg-stone-100 dark:bg-stone-800/40',
+    "badge_text" VARCHAR(100) NOT NULL DEFAULT 'text-stone-800 dark:text-stone-300',
+    "badge_border" VARCHAR(100) NOT NULL DEFAULT 'border-stone-200 dark:border-stone-700/40',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -338,3 +338,14 @@ CREATE POLICY "Permitir acesso geral de configuracoes" ON "store_settings" FOR A
 
 DROP POLICY IF EXISTS "Permitir acesso geral de usuarios" ON "users";
 CREATE POLICY "Permitir acesso geral de usuarios" ON "users" FOR ALL USING (true) WITH CHECK (true);
+
+-- 16. HABILITAR REALTIME (SINCRONIZAÇÃO EM TEMPO REAL MULTI-DISPOSITIVO)
+DO $$ BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE purchase_orders;
+    ALTER PUBLICATION supabase_realtime ADD TABLE purchase_order_items;
+    ALTER PUBLICATION supabase_realtime ADD TABLE suppliers;
+    ALTER PUBLICATION supabase_realtime ADD TABLE store_settings;
+    ALTER PUBLICATION supabase_realtime ADD TABLE categories;
+    ALTER PUBLICATION supabase_realtime ADD TABLE users;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
