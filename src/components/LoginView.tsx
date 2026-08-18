@@ -14,15 +14,15 @@ import { useCustomization } from '../context/CustomizationContext';
 
 export const LoginView: React.FC = () => {
   const { login, users, storeSettings } = useCustomization();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@znkpacking.com.br');
+  const [password, setPassword] = useState('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setErrorMsg('Por favor, informe seu email e senha.');
       return;
@@ -43,12 +43,25 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  // Quick fill demo user credentials
-  const handleQuickLogin = (demoEmail: string, demoPass?: string) => {
+  // Quick fill & login demo user credentials
+  const handleQuickLogin = async (demoEmail: string, demoPass?: string) => {
     const user = users.find(u => u.email.toLowerCase() === demoEmail.toLowerCase());
+    const pass = demoPass || user?.password || 'admin';
     setEmail(demoEmail);
-    setPassword(demoPass || user?.password || 'admin');
+    setPassword(pass);
     setErrorMsg('');
+    setIsLoading(true);
+
+    try {
+      const res = await login(demoEmail, pass);
+      if (!res.success) {
+        setErrorMsg(res.message || 'Credenciais inválidas.');
+      }
+    } catch (err) {
+      setErrorMsg('Erro de autenticação no servidor.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
