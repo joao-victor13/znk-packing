@@ -100,40 +100,40 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
           {/* Atrasados */}
           <button
             onClick={() => onSelectDeadlineFilter(activeDeadlineFilter === 'delayed' ? 'all' : 'delayed')}
-            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
               activeDeadlineFilter === 'delayed'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 hover:bg-rose-100 border border-rose-200/60 dark:border-rose-900/40'
+                ? 'bg-rose-600 text-white shadow-xs font-bold ring-1 ring-rose-500'
+                : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/60 dark:border-rose-900/50'
             }`}
           >
             <span className="text-xs font-bold leading-tight">{summary.delayedCount}</span>
-            <span className="text-[9px] uppercase font-medium mt-0.5">Atraso</span>
+            <span className="text-[9px] uppercase font-semibold mt-0.5">Atraso</span>
           </button>
 
           {/* Próximos 7d */}
           <button
             onClick={() => onSelectDeadlineFilter(activeDeadlineFilter === 'due_soon' ? 'all' : 'due_soon')}
-            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
               activeDeadlineFilter === 'due_soon'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 hover:bg-amber-100 border border-amber-200/60 dark:border-amber-900/40'
+                ? 'bg-amber-600 text-white shadow-xs font-bold ring-1 ring-amber-500'
+                : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200/60 dark:border-amber-900/50'
             }`}
           >
             <span className="text-xs font-bold leading-tight">{summary.approachingCount}</span>
-            <span className="text-[9px] uppercase font-medium mt-0.5">Próx 7d</span>
+            <span className="text-[9px] uppercase font-semibold mt-0.5">Próx 7d</span>
           </button>
 
           {/* No Prazo */}
           <button
             onClick={() => onSelectDeadlineFilter(activeDeadlineFilter === 'on_track' ? 'all' : 'on_track')}
-            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+            className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
               activeDeadlineFilter === 'on_track'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200/60 dark:border-emerald-900/40'
+                ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200/60 dark:border-emerald-900/50'
             }`}
           >
             <span className="text-xs font-bold leading-tight">{summary.onTimeCount}</span>
-            <span className="text-[9px] uppercase font-medium mt-0.5">No Prazo</span>
+            <span className="text-[9px] uppercase font-semibold mt-0.5">No Prazo</span>
           </button>
         </div>
       </div>

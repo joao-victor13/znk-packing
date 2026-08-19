@@ -107,7 +107,7 @@ export const OrderKanbanView: React.FC<OrderKanbanViewProps> = ({
                     >
                       {/* Top Bar: Order & Deadline Badge */}
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-brand-900 dark:text-brand-300 text-xs">
+                        <span className="font-mono font-bold text-brand-900 dark:text-amber-400 text-xs">
                           {order.orderNumber}
                         </span>
                         <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${deadline.badgeClass}`}>
@@ -117,7 +117,7 @@ export const OrderKanbanView: React.FC<OrderKanbanViewProps> = ({
 
                       {/* Supplier & Collection */}
                       <div className="truncate">
-                        <div className="font-semibold text-xs text-editorial-text dark:text-stone-200 truncate">
+                        <div className="font-semibold text-xs text-editorial-text dark:text-stone-100 truncate">
                           {order.supplierTradeName || order.supplierName}
                         </div>
                         <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
@@ -131,8 +131,15 @@ export const OrderKanbanView: React.FC<OrderKanbanViewProps> = ({
                           <Calendar className="w-3 h-3 mr-1" />
                           <span>{formatDate(order.expectedDeliveryDate)}</span>
                         </div>
-                        <div className="font-mono font-bold text-brand-800 dark:text-brand-300 text-xs">
-                          {canViewCosts ? formatCurrency(order.totalAmount) : '•••••'}
+                        <div className="text-right">
+                          <div className="font-mono font-bold text-brand-800 dark:text-amber-400 text-xs">
+                            {canViewCosts ? formatCurrency(order.totalAmount) : 'R$ ••••••'}
+                          </div>
+                          {layoutSettings.showSuggestedPrice && (
+                            <div className="text-[9px] font-mono text-emerald-700 dark:text-emerald-400">
+                              Var: {formatCurrency(order.items.reduce((s, it) => s + ((it.suggestedPrice || it.unitCost * 2.2) * it.quantity), 0))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -141,7 +148,7 @@ export const OrderKanbanView: React.FC<OrderKanbanViewProps> = ({
                         <div className="flex items-center space-x-1">
                           <button
                             onClick={() => onEditOrder(order)}
-                            className="p-1 rounded text-stone-400 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                            className="p-1 rounded text-stone-400 dark:text-stone-400 hover:text-brand-800 dark:hover:text-amber-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                             title="Editar"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -151,7 +158,7 @@ export const OrderKanbanView: React.FC<OrderKanbanViewProps> = ({
                               exportOrderToPdf(order, storeSettings);
                               onShowToast(`PDF ${order.orderNumber} gerado!`, 'success');
                             }}
-                            className="p-1 rounded text-stone-400 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                            className="p-1 rounded text-stone-400 dark:text-stone-400 hover:text-brand-800 dark:hover:text-amber-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                             title="PDF"
                           >
                             <FileText className="w-3.5 h-3.5" />

@@ -295,11 +295,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
       {/* Settings Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-stone-200 dark:border-stone-800 pb-2">
         <button
+          type="button"
           onClick={() => setActiveTab('store')}
-          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
             activeTab === 'store'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 border border-brand-200 dark:border-stone-800'
+              ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs ring-1 ring-brand-500/40'
+              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-800'
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
@@ -307,11 +308,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('theme')}
-          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
             activeTab === 'theme'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 border border-brand-200 dark:border-stone-800'
+              ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs ring-1 ring-brand-500/40'
+              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-800'
           }`}
         >
           <Palette className="w-3.5 h-3.5" />
@@ -319,11 +321,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('categories')}
-          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
             activeTab === 'categories'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 border border-brand-200 dark:border-stone-800'
+              ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs ring-1 ring-brand-500/40'
+              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-800'
           }`}
         >
           <Tag className="w-3.5 h-3.5" />
@@ -331,11 +334,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('users')}
-          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
             activeTab === 'users'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 border border-brand-200 dark:border-stone-800'
+              ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs ring-1 ring-brand-500/40'
+              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-800'
           }`}
         >
           <Users className="w-3.5 h-3.5" />
@@ -344,11 +348,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('layout')}
-          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
             activeTab === 'layout'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 border border-brand-200 dark:border-stone-800'
+              ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs ring-1 ring-brand-500/40'
+              : 'bg-white dark:bg-stone-900 text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-800 border border-brand-200 dark:border-stone-800'
           }`}
         >
           <LayoutGrid className="w-3.5 h-3.5" />
@@ -522,16 +527,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'light'
-                  ? 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-500'
-                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 bg-white dark:bg-stone-900'
+                  ? 'border-brand-600 dark:border-amber-500 bg-brand-50/80 dark:bg-stone-800 shadow-xs ring-1 ring-brand-500'
+                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-stone-700 bg-white dark:bg-stone-900'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
                   <Sun className="w-5 h-5" />
                 </div>
                 {themeMode === 'light' && (
-                  <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-brand-600 dark:bg-amber-500 text-white flex items-center justify-center">
                     <Check className="w-3 h-3" />
                   </span>
                 )}
@@ -552,8 +557,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'dark'
-                  ? 'border-brand-600 bg-stone-800 shadow-xs ring-1 ring-brand-500'
-                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 bg-white dark:bg-stone-900'
+                  ? 'border-brand-600 dark:border-amber-500 bg-brand-50/80 dark:bg-stone-800 shadow-xs ring-1 ring-brand-500'
+                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-stone-700 bg-white dark:bg-stone-900'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -561,7 +566,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                   <Moon className="w-5 h-5" />
                 </div>
                 {themeMode === 'dark' && (
-                  <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-brand-600 dark:bg-amber-500 text-white flex items-center justify-center">
                     <Check className="w-3 h-3" />
                   </span>
                 )}
@@ -582,8 +587,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
               }}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 themeMode === 'system'
-                  ? 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-500'
-                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 bg-white dark:bg-stone-900'
+                  ? 'border-brand-600 dark:border-amber-500 bg-brand-50/80 dark:bg-stone-800 shadow-xs ring-1 ring-brand-500'
+                  : 'border-stone-200 dark:border-stone-800 hover:border-brand-300 dark:hover:border-stone-700 bg-white dark:bg-stone-900'
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -591,7 +596,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onShowToast }) => {
                   <Monitor className="w-5 h-5" />
                 </div>
                 {themeMode === 'system' && (
-                  <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-brand-600 dark:bg-amber-500 text-white flex items-center justify-center">
                     <Check className="w-3 h-3" />
                   </span>
                 )}

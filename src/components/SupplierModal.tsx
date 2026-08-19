@@ -62,26 +62,26 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl border border-brand-200 shadow-dropdown max-w-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl border border-brand-200 dark:border-stone-800 shadow-dropdown max-w-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-5 bg-brand-50/70 border-b border-brand-200 flex items-center justify-between">
+        <div className="p-5 bg-brand-50/70 dark:bg-stone-800 border-b border-brand-200 dark:border-stone-700 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center">
               <Building2 className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-serif font-bold text-base text-editorial-text">
+              <h2 className="font-serif font-bold text-base text-editorial-text dark:text-stone-100">
                 {supplierToEdit ? 'Editar Fornecedor / Oficina' : 'Novo Fornecedor / Oficina de Confecção'}
               </h2>
-              <p className="text-[11px] text-editorial-muted">
+              <p className="text-[11px] text-editorial-muted dark:text-stone-400">
                 Cadastre os dados de contato e condições comerciais da oficina têxtil.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+            className="p-1 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -92,7 +92,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Nome Fantasia */}
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Nome Fantasia (Como é conhecido) *
               </label>
               <input
@@ -101,13 +101,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={tradeName}
                 onChange={e => setTradeName(e.target.value)}
                 placeholder="Ex: Prime Tricot & Malhas"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Razão Social */}
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Razão Social (Documental) *
               </label>
               <input
@@ -116,13 +116,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Ex: Têxtil & Malharia Prime Sul Ltda"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* CNPJ */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 CNPJ
               </label>
               <input
@@ -130,13 +130,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={cnpj}
                 onChange={e => setCnpj(e.target.value)}
                 placeholder="00.000.000/0001-00"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm font-mono text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm font-mono text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Contato Comercial */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Contato Comercial
               </label>
               <input
@@ -144,13 +144,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={contactName}
                 onChange={e => setContactName(e.target.value)}
                 placeholder="Ex: Mariana Silveira"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Telefone / WhatsApp */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 WhatsApp / Telefone *
               </label>
               <input
@@ -158,13 +158,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="(11) 98765-4321"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Email */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Email para Pedidos
               </label>
               <input
@@ -172,13 +172,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="pedidos@fornecedor.com.br"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Cidade e UF */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Cidade
               </label>
               <input
@@ -186,12 +186,12 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={city}
                 onChange={e => setCity(e.target.value)}
                 placeholder="São Paulo, Brusque, etc."
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 UF / Estado
               </label>
               <input
@@ -200,13 +200,13 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={state}
                 onChange={e => setState(e.target.value.toUpperCase())}
                 placeholder="SP"
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 uppercase"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 uppercase"
               />
             </div>
 
             {/* Especialidade de Confecção */}
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Especialidade / Tipos de Peça
               </label>
               <input
@@ -214,22 +214,22 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 value={categorySpecialty}
                 onChange={e => setCategorySpecialty(e.target.value)}
                 placeholder="Ex: Alfaiataria, Tricot, Linho puro, Jeanswear..."
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
 
             {/* Condição Padrão & Lead Time */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Condição de Pagamento Padrão
               </label>
               <select
                 value={defaultPaymentTerms}
                 onChange={e => setDefaultPaymentTerms(e.target.value)}
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               >
                 {PAYMENT_TERMS_OPTIONS.map((opt, idx) => (
-                  <option key={idx} value={opt}>
+                  <option key={idx} value={opt} className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">
                     {opt}
                   </option>
                 ))}
@@ -237,7 +237,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-editorial-text">
+              <label className="text-xs font-semibold text-editorial-text dark:text-stone-200">
                 Prazo Médio de Produção (Dias)
               </label>
               <input
@@ -246,17 +246,17 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 max="90"
                 value={averageLeadDays}
                 onChange={e => setAverageLeadDays(parseInt(e.target.value, 10) || 18)}
-                className="w-full px-3 py-2 bg-editorial-light border border-brand-200 rounded-lg text-xs sm:text-sm font-mono text-editorial-text focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3 py-2 bg-editorial-light dark:bg-stone-800 border border-brand-200 dark:border-stone-700 rounded-lg text-xs sm:text-sm font-mono text-editorial-text dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex items-center justify-end space-x-2 pt-4 border-t border-stone-100">
+          <div className="flex items-center justify-end space-x-2 pt-4 border-t border-stone-100 dark:border-stone-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-stone-200 text-editorial-muted hover:bg-stone-50 text-xs sm:text-sm font-medium transition-colors"
+              className="px-4 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-editorial-muted dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 text-xs sm:text-sm font-medium transition-colors"
             >
               Cancelar
             </button>

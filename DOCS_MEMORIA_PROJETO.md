@@ -77,8 +77,23 @@ O **ZNK Packing** é um ERP e sistema de gestão de compras, confecção e relac
 * **Solução Implementada:**
   * **Sincronização Universal de Usuários:** Adicionados `fetchUsersFromSupabase`, `saveUserToSupabase` e `deleteUserFromSupabase` no [`supabaseClient.ts`](./src/services/supabaseClient.ts) e integrados ao [`CustomizationContext.tsx`](./src/context/CustomizationContext.tsx).
   * **Proteção de Foreign Key:** Tratamento preventivo em `saveOrderToSupabase` para garantir que `user_id` e `supplier_id` sempre apontem para UUIDs válidos e existentes no Supabase.
-  * **Sincronização em Foco & Intervalo Periódico:** Event listeners de `window.focus`, `document.visibilitychange` e polling periódico a cada 12 segundos garantem que qualquer aparelho atualize seus dados instantaneamente assim que o usuário retornar à aba ou abrir o aplicativo.
-  * **Realtime Habilitado:** Canais de streaming ativo para `purchase_orders`, `suppliers`, `users`, `categories` e `store_settings`.
+### 2.9. Experiência de Uso (UX/UI), Navegação Rápida & Microinterações
+* **Command Palette Global (`Ctrl + K` / `Cmd + K`):**
+  * Modal central de busca instantânea implementado em [`src/components/CommandPalette.tsx`](./src/components/CommandPalette.tsx) e acionado via atalho global ou botão na barra superior.
+  * Permite navegar diretamente para qualquer pedido, fornecedor, trocar de tema, exportar relatórios ou disparar ações operacionais.
+* **Navegação & Atalhos estilo Planilha / Excel no Grid de Pedidos:**
+  * Hook [`src/hooks/useGridNavigation.ts`](./src/hooks/useGridNavigation.ts) fornece navegação fluida por células via setas direcionais (`↑`, `↓`, `←`, `→`) e `Tab`.
+  * `Enter`: Avança para a célula inferior ou cria automaticamente uma nova linha se estiver no final.
+  * `Ctrl + D` / `Cmd + D`: Duplica a linha atual mantendo modelo/custo (ideal para variações de cores/tamanhos).
+  * `F2`: Seleciona rapidamente o conteúdo da célula para digitação ágil.
+* **Auto-save Silencioso & Recuperação de Sessão:**
+  * Salva o rascunho do pedido a cada 10 segundos no `localStorage` com indicador discreto de horário no cabeçalho (`● Salvo às 16:32`).
+  * Proteção contra fechamento acidental da aba (`beforeunload`) e confirmação de descarte de alterações não salvas.
+  * Banner inteligente de restauração de rascunho caso o operador abra um novo pedido após queda de energia ou fechamento de navegador.
+* **Toasts Informativos com Ação de Desfazer (Undo):**
+  * Ao excluir uma linha da planilha de confecção, o toast flutuante exibe botão interativo `[Desfazer]` para restauração imediata do item.
+* **Sticky Totals (Rodapé Flutuante):**
+  * Barra inferior flutuante que se mantém visível em pedidos longos, exibindo peças totais, subtotal e botão de salvar.
 
 ---
 

@@ -10,7 +10,9 @@ import {
   Moon,
   Monitor,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Search,
+  Command
 } from 'lucide-react';
 import { PurchaseOrder, ThemeMode } from '../types';
 import { exportOrdersListToExcel } from '../utils/exportExcel';
@@ -23,6 +25,7 @@ interface NavbarProps {
   onNewOrder: () => void;
   orders: PurchaseOrder[];
   onResetToDemo: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   onNewOrder,
   orders,
+  onOpenCommandPalette,
 }) => {
   const { storeSettings, currentUser, hasPermission, isAdmin, themeMode, setThemeMode, logout } = useCustomization();
   const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
@@ -79,13 +83,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Painel de Pedidos */}
             <button
               onClick={() => onNavigate('list')}
-              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 ${
                 activeView === 'list'
-                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-amber-300 shadow-xs border border-brand-300/60 dark:border-stone-700'
                   : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <FileSpreadsheet className="w-4 h-4 text-brand-600 dark:text-amber-400" />
               <span>Pedidos</span>
               {activeOrdersCount > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 bg-brand-600 text-white rounded-full text-[10px] font-bold">
@@ -97,28 +101,43 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Fornecedores */}
             <button
               onClick={() => onNavigate('suppliers')}
-              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 ${
                 activeView === 'suppliers'
-                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-amber-300 shadow-xs border border-brand-300/60 dark:border-stone-700'
                   : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <Users className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <Users className="w-4 h-4 text-brand-600 dark:text-amber-400" />
               <span>Fornecedores</span>
             </button>
 
             {/* Configurações */}
             <button
               onClick={() => onNavigate('settings')}
-              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 ${
                 activeView === 'settings'
-                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-stone-100 font-semibold shadow-xs'
+                  ? 'bg-brand-100 dark:bg-stone-800 text-brand-900 dark:text-amber-300 shadow-xs border border-brand-300/60 dark:border-stone-700'
                   : 'text-editorial-muted dark:text-stone-400 hover:text-editorial-text dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/50'
               }`}
             >
-              <SlidersHorizontal className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <SlidersHorizontal className="w-4 h-4 text-brand-600 dark:text-amber-400" />
               <span>Configurações</span>
             </button>
+
+            {/* Global Command Palette Trigger Button */}
+            {onOpenCommandPalette && (
+              <button
+                onClick={onOpenCommandPalette}
+                title="Busca Global & Ações Rápidas (Ctrl + K)"
+                className="hidden sm:flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-750 text-editorial-muted dark:text-stone-300 text-xs transition-colors shadow-2xs group cursor-pointer"
+              >
+                <Search className="w-3.5 h-3.5 text-brand-600 dark:text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="hidden md:inline text-[11px] font-medium">Buscar</span>
+                <kbd className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded text-stone-500 dark:text-stone-400 shadow-2xs">
+                  Ctrl+K
+                </kbd>
+              </button>
+            )}
 
             {/* Export All Orders */}
             {hasPermission('export_reports') && (

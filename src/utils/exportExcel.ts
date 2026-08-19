@@ -13,7 +13,7 @@ export function exportOrderToExcel(order: PurchaseOrder) {
     ['Condição de Pagamento:', order.paymentTerms, 'Coleção:', order.collection],
     ['Transportadora:', order.shippingCarrier || 'A combinar', 'Observações:', order.notes],
     [], // Empty row
-    ['#', 'REF / SKU', 'DESCRIÇÃO DO MODELO', 'CATEGORIA', 'GRADE / TAMANHO', 'COR / VARIANTE', 'QTD (UN)', 'CUSTO UNIT. (R$)', 'SUBTOTAL (R$)'],
+    ['#', 'REF / SKU', 'DESCRIÇÃO DO MODELO', 'CATEGORIA', 'GRADE / TAMANHO', 'COR / VARIANTE', 'QTD (UN)', 'CUSTO BRUTO (R$)', 'DESC (%)', 'MARKUP', 'PREÇO VAREJO (R$)', 'SUBTOTAL LÍQ. (R$)'],
   ];
 
   // Items rows
@@ -26,6 +26,9 @@ export function exportOrderToExcel(order: PurchaseOrder) {
     item.color,
     Number(item.quantity) || 0,
     Number(item.unitCost) || 0,
+    item.discountPercent ? `${item.discountPercent}%` : '0%',
+    Number(item.markup) || 2.2,
+    Number(item.suggestedPrice) || (Number(item.unitCost) * (Number(item.markup) || 2.2)),
     Number(item.subtotal) || 0,
   ]);
 
@@ -34,10 +37,10 @@ export function exportOrderToExcel(order: PurchaseOrder) {
   // Footer rows
   const footerRows = [
     [],
-    ['', '', '', '', '', 'TOTAL DE PEÇAS:', order.totalPieces, 'SUBTOTAL ITENS:', itemsSubtotal],
-    ['', '', '', '', '', '', '', 'FRETE (+):', Number(order.shippingCost) || 0],
-    ['', '', '', '', '', '', '', 'DESCONTO (-):', Number(order.discount) || 0],
-    ['', '', '', '', '', '', '', 'VALOR TOTAL (R$):', order.totalAmount],
+    ['', '', '', '', '', '', '', '', 'TOTAL DE PEÇAS:', order.totalPieces, 'SUBTOTAL ITENS:', itemsSubtotal],
+    ['', '', '', '', '', '', '', '', '', '', 'FRETE (+):', Number(order.shippingCost) || 0],
+    ['', '', '', '', '', '', '', '', '', '', 'DESCONTO GERAL (-):', Number(order.discount) || 0],
+    ['', '', '', '', '', '', '', '', '', '', 'VALOR TOTAL (R$):', order.totalAmount],
   ];
 
   const fullData = [...headerData, ...itemRows, ...footerRows];
@@ -48,11 +51,14 @@ export function exportOrderToExcel(order: PurchaseOrder) {
   ws['!cols'] = [
     { wch: 6 },
     { wch: 18 },
-    { wch: 40 },
-    { wch: 20 },
+    { wch: 38 },
     { wch: 18 },
-    { wch: 20 },
-    { wch: 12 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 10 },
+    { wch: 16 },
+    { wch: 10 },
+    { wch: 10 },
     { wch: 18 },
     { wch: 18 },
   ];

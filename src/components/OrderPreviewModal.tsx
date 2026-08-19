@@ -23,9 +23,10 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { storeSettings } = useCustomization();
+  const { storeSettings, layoutSettings, hasPermission } = useCustomization();
   if (!isOpen || !order) return null;
 
+  const canViewCosts = hasPermission('orders_view_costs') && !layoutSettings.hideFinancialValues;
   const deadline = getDeliveryDeadlineStatus(order.expectedDeliveryDate, order.status);
   const itemsSubtotal = order.items.reduce((acc, i) => acc + i.subtotal, 0);
 
@@ -34,12 +35,12 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-xs no-print">
-      <div className="bg-white rounded-2xl border border-brand-300 shadow-dropdown max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs no-print">
+      <div className="bg-white rounded-2xl border border-brand-300 dark:border-stone-700 shadow-dropdown max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header Actions */}
-        <div className="p-4 bg-brand-50 border-b border-brand-200 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 bg-brand-50 dark:bg-stone-800 border-b border-brand-200 dark:border-stone-700 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="font-mono font-bold text-brand-900 text-sm">
+            <span className="font-mono font-bold text-brand-900 dark:text-amber-400 text-sm">
               {order.orderNumber}
             </span>
             <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${deadline.badgeClass}`}>
@@ -50,7 +51,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 text-xs font-medium flex items-center space-x-1 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 text-xs font-medium flex items-center space-x-1 transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Imprimir</span>
@@ -58,7 +59,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
 
             <button
               onClick={() => exportOrderToExcel(order)}
-              className="px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 text-xs font-medium flex items-center space-x-1 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-xs font-medium flex items-center space-x-1 transition-colors"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Excel</span>
@@ -74,7 +75,7 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1 text-stone-400 hover:text-stone-700 rounded-lg"
+              className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg"
             >
               <X className="w-5 h-5" />
             </button>
@@ -169,7 +170,12 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                   <th className="py-2.5 px-3">Grade</th>
                   <th className="py-2.5 px-3">Cor</th>
                   <th className="py-2.5 px-3 text-right">Qtd</th>
-                  <th className="py-2.5 px-3 text-right">Custo Unit.</th>
+                  <th className="py-2.5 px-3 text-right">Custo Bruto</th>
+                  <th className="py-2.5 px-3 text-center">Desc %</th>
+                  <th className="py-2.5 px-3 text-center">Markup</th>
+                  {layoutSettings.showSuggestedPrice && (
+                    <th className="py-2.5 px-3 text-right">Varejo Sug.</th>
+                  )}
                   <th className="py-2.5 px-3 text-right">Subtotal</th>
                 </tr>
               </thead>
@@ -191,8 +197,23 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
                       <span>{item.color}</span>
                     </td>
                     <td className="py-2 px-3 text-right font-mono font-bold">{item.quantity}</td>
-                    <td className="py-2 px-3 text-right font-mono">{formatCurrency(item.unitCost)}</td>
-                    <td className="py-2 px-3 text-right font-mono font-bold text-stone-900">{formatCurrency(item.subtotal)}</td>
+                    <td className="py-2 px-3 text-right font-mono">
+                      {canViewCosts ? formatCurrency(item.unitCost) : '••••'}
+                    </td>
+                    <td className="py-2 px-3 text-center font-mono font-semibold text-emerald-700">
+                      {item.discountPercent ? `${item.discountPercent}%` : '-'}
+                    </td>
+                    <td className="py-2 px-3 text-center font-mono font-semibold text-amber-800">
+                      {item.markup ? `${item.markup}x` : '2.2x'}
+                    </td>
+                    {layoutSettings.showSuggestedPrice && (
+                      <td className="py-2 px-3 text-right font-mono font-semibold text-emerald-700">
+                        {formatCurrency(item.suggestedPrice || item.unitCost * (item.markup || 2.2))}
+                      </td>
+                    )}
+                    <td className="py-2 px-3 text-right font-mono font-bold text-stone-900">
+                      {canViewCosts ? formatCurrency(item.subtotal) : '••••'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -215,23 +236,31 @@ export const OrderPreviewModal: React.FC<OrderPreviewModalProps> = ({
               </div>
               <div className="flex justify-between text-editorial-muted">
                 <span>Subtotal Itens:</span>
-                <strong className="font-mono text-editorial-text">{formatCurrency(itemsSubtotal)}</strong>
+                <strong className="font-mono text-editorial-text">
+                  {canViewCosts ? formatCurrency(itemsSubtotal) : 'R$ ••••••'}
+                </strong>
               </div>
               {order.shippingCost ? (
                 <div className="flex justify-between text-editorial-muted">
                   <span>Frete (+):</span>
-                  <strong className="font-mono text-editorial-text">{formatCurrency(order.shippingCost)}</strong>
+                  <strong className="font-mono text-editorial-text">
+                    {canViewCosts ? formatCurrency(order.shippingCost) : 'R$ ••••••'}
+                  </strong>
                 </div>
               ) : null}
               {order.discount ? (
                 <div className="flex justify-between text-rose-700">
                   <span>Desconto (-):</span>
-                  <strong className="font-mono text-rose-800">{formatCurrency(order.discount)}</strong>
+                  <strong className="font-mono text-rose-800">
+                    {canViewCosts ? formatCurrency(order.discount) : 'R$ ••••••'}
+                  </strong>
                 </div>
               ) : null}
               <div className="pt-2 border-t border-brand-200 flex justify-between items-baseline text-brand-900 font-bold">
                 <span className="text-sm">VALOR TOTAL DO PEDIDO:</span>
-                <span className="text-lg font-serif">{formatCurrency(order.totalAmount)}</span>
+                <span className="text-lg font-serif">
+                  {canViewCosts ? formatCurrency(order.totalAmount) : 'R$ ••••••'}
+                </span>
               </div>
             </div>
           </div>

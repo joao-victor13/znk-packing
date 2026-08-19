@@ -9,16 +9,17 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: 'rgb(var(--color-primary-light-rgb, 250, 246, 240) / <alpha-value>)',
-          100: 'rgb(var(--color-primary-subtle-rgb, 244, 235, 225) / <alpha-value>)',
-          200: 'rgb(var(--color-primary-border-rgb, 232, 215, 195) / <alpha-value>)',
-          300: 'rgb(var(--color-primary-border-rgb, 218, 191, 160) / <alpha-value>)',
-          400: 'rgb(var(--color-primary-rgb, 199, 159, 120) / <alpha-value>)',
-          500: 'rgb(var(--color-primary-rgb, 176, 125, 79) / <alpha-value>)',
-          600: 'rgb(var(--color-primary-hover-rgb, 142, 95, 54) / <alpha-value>)',
-          700: 'rgb(var(--color-primary-hover-rgb, 108, 69, 36) / <alpha-value>)',
-          800: 'rgb(var(--color-primary-text-rgb, 78, 48, 24) / <alpha-value>)',
-          900: 'rgb(var(--color-primary-text-rgb, 47, 27, 11) / <alpha-value>)',
+          50: 'rgb(var(--color-primary-50-rgb, 250 246 240) / <alpha-value>)',
+          100: 'rgb(var(--color-primary-100-rgb, 244 235 225) / <alpha-value>)',
+          200: 'rgb(var(--color-primary-200-rgb, 232 215 195) / <alpha-value>)',
+          300: 'rgb(var(--color-primary-300-rgb, 218 191 160) / <alpha-value>)',
+          400: 'rgb(var(--color-primary-400-rgb, 199 159 120) / <alpha-value>)',
+          500: 'rgb(var(--color-primary-500-rgb, 176 125 79) / <alpha-value>)',
+          600: 'rgb(var(--color-primary-600-rgb, 142 95 54) / <alpha-value>)',
+          700: 'rgb(var(--color-primary-700-rgb, 108 69 36) / <alpha-value>)',
+          800: 'rgb(var(--color-primary-800-rgb, 78 48 24) / <alpha-value>)',
+          900: 'rgb(var(--color-primary-900-rgb, 47 27 11) / <alpha-value>)',
+          950: 'rgb(var(--color-primary-950-rgb, 28 16 7) / <alpha-value>)',
         },
         editorial: {
           light: 'var(--color-bg-light, #FAF8F5)',

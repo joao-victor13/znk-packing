@@ -199,6 +199,8 @@ model PurchaseOrder {
   // Valores Financeiros (DECIMAL de Alta Precisão)
   shippingCost         Decimal             @default(0.00) @map("shipping_cost") @db.Decimal(10, 2)
   discount             Decimal             @default(0.00) @db.Decimal(10, 2)
+  discountPercentage   Decimal             @default(0.00) @map("discount_percentage") @db.Decimal(5, 2)
+  defaultMarkup        Decimal             @default(2.20) @map("default_markup") @db.Decimal(5, 2)
   totalPieces          Int                 @default(0) @map("total_pieces")
   totalAmount          Decimal             @default(0.00) @map("total_amount") @db.Decimal(10, 2) // Subtotal + Frete - Desconto
   
@@ -235,8 +237,10 @@ model PurchaseOrderItem {
   
   quantity        Int           @db.Integer
   unitCost        Decimal       @map("unit_cost") @db.Decimal(10, 2)
+  discountPercent Decimal       @default(0.00) @map("discount_percent") @db.Decimal(5, 2)
+  markup          Decimal       @default(2.20) @db.Decimal(5, 2)
   suggestedPrice  Decimal?      @map("suggested_price") @db.Decimal(10, 2)
-  subtotal        Decimal       @db.Decimal(10, 2) // quantity * unitCost
+  subtotal        Decimal       @db.Decimal(10, 2) // quantity * unitCost * (1 - discount_percent/100)
   notes           String?       @db.VarChar(255)
   
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)

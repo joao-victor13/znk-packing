@@ -410,13 +410,13 @@ export const CustomizationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     if (!foundUser) {
-      return { success: false, message: 'Usuário não encontrado. Use o email admin@znkpacking.com.br e senha admin.' };
+      return { success: false, message: 'Email ou senha incorretos.' };
     }
 
     const expectedPassword = foundUser.password || (foundUser.role === 'admin' ? 'admin' : '123456');
 
     if (expectedPassword !== trimmedPass && trimmedPass !== 'admin' && trimmedPass !== '123456') {
-      return { success: false, message: 'Senha incorreta. A senha padrão do Admin é admin.' };
+      return { success: false, message: 'Email ou senha incorretos.' };
     }
 
     // Success: activate user and session

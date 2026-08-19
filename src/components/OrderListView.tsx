@@ -117,13 +117,16 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse min-w-[940px]">
         <thead>
-          <tr className="bg-brand-50/70 dark:bg-stone-800/80 border-b border-brand-200 dark:border-stone-800 text-[11px] font-semibold uppercase tracking-wider text-editorial-muted dark:text-stone-400">
+          <tr className="bg-brand-50/80 dark:bg-stone-800 border-b border-brand-200 dark:border-stone-700 text-[11px] font-semibold uppercase tracking-wider text-editorial-muted dark:text-stone-300">
             <th className="py-2.5 px-3 w-10 text-center"></th>
             <th className="py-2.5 px-3 w-32">Nº Pedido</th>
             <th className="py-2.5 px-3 w-52">Fornecedor</th>
             <th className="py-2.5 px-3 w-36">Status</th>
             <th className="py-2.5 px-3 w-36">Entrega</th>
             <th className="py-2.5 px-3 w-28 text-right">Volume</th>
+            {layoutSettings.showSuggestedPrice && (
+              <th className="py-2.5 px-3 w-36 text-right">Varejo Sugerido</th>
+            )}
             <th className="py-2.5 px-3 w-36 text-right">Valor Total</th>
             <th className="py-2.5 px-3 w-40 text-center">Ações</th>
           </tr>
@@ -133,19 +136,23 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
             const isExpanded = !!expandedOrders[order.id];
             const deadline = getDeliveryDeadlineStatus(order.expectedDeliveryDate, order.status);
             const statusBadge = getStatusBadge(order.status);
+            const totalSuggestedRetail = order.items.reduce(
+              (sum, it) => sum + ((it.suggestedPrice || it.unitCost * 2.2) * it.quantity),
+              0
+            );
 
             return (
               <React.Fragment key={order.id}>
-                <tr className="hover:bg-brand-50/30 dark:hover:bg-stone-800/40 transition-colors group">
+                <tr className="hover:bg-brand-50/40 dark:hover:bg-stone-800/60 transition-colors group">
                   {/* Expand Chevron */}
                   <td className="py-2.5 px-2 text-center">
                     <button
                       onClick={() => toggleExpand(order.id)}
-                      className="p-1 text-stone-400 hover:text-brand-700 dark:hover:text-stone-200 rounded transition-colors"
+                      className="p-1 text-stone-400 hover:text-brand-700 dark:hover:text-stone-200 rounded transition-colors cursor-pointer"
                       title={isExpanded ? 'Ocultar itens' : 'Ver itens do pedido'}
                     >
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-brand-700 dark:text-brand-400" />
+                        <ChevronDown className="w-4 h-4 text-brand-700 dark:text-amber-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />
                       )}
@@ -154,7 +161,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
                   {/* Order Number & Collection */}
                   <td className="py-2.5 px-3">
-                    <div className="font-mono font-bold text-brand-900 dark:text-brand-300 text-xs sm:text-sm">
+                    <div className="font-mono font-bold text-brand-900 dark:text-amber-400 text-xs sm:text-sm">
                       {order.orderNumber}
                     </div>
                     <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate max-w-[130px]" title={order.collection}>
@@ -164,7 +171,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
                   {/* Supplier & Contact */}
                   <td className="py-2.5 px-3">
-                    <div className="font-semibold text-editorial-text dark:text-stone-200 truncate max-w-[190px]" title={order.supplierTradeName || order.supplierName}>
+                    <div className="font-semibold text-editorial-text dark:text-stone-100 truncate max-w-[190px]" title={order.supplierTradeName || order.supplierName}>
                       {order.supplierTradeName || order.supplierName}
                     </div>
                     <div className="text-[10px] text-editorial-muted dark:text-stone-400 truncate">
@@ -180,11 +187,11 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                         onChange={e => onUpdateStatus(order.id, e.target.value as OrderStatus)}
                         className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border cursor-pointer focus:outline-none ${statusBadge.class}`}
                       >
-                        <option value="pending">Pendente</option>
-                        <option value="approved">Em Produção</option>
-                        <option value="in_transit">Em Trânsito</option>
-                        <option value="delivered">Entregue</option>
-                        <option value="cancelled">Cancelado</option>
+                        <option value="pending" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">Pendente</option>
+                        <option value="approved" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">Em Produção</option>
+                        <option value="in_transit" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">Em Trânsito</option>
+                        <option value="delivered" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">Entregue</option>
+                        <option value="cancelled" className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100">Cancelado</option>
                       </select>
                     ) : (
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusBadge.class}`}>
@@ -209,17 +216,29 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
                   {/* Volume (Pieces) */}
                   <td className="py-2.5 px-3 text-right">
-                    <div className="font-mono font-bold text-editorial-text dark:text-stone-200 text-xs sm:text-sm">
-                      {order.totalPieces.toLocaleString('pt-BR')} <span className="text-[9px] font-normal text-editorial-muted">un</span>
+                    <div className="font-mono font-bold text-editorial-text dark:text-stone-100 text-xs sm:text-sm">
+                      {order.totalPieces.toLocaleString('pt-BR')} <span className="text-[9px] font-normal text-editorial-muted dark:text-stone-400">un</span>
                     </div>
                     <div className="text-[10px] text-editorial-muted dark:text-stone-400">
                       {order.items.length} {order.items.length === 1 ? 'modelo' : 'modelos'}
                     </div>
                   </td>
 
+                  {/* Preço Sugerido (Varejo) se habilitado */}
+                  {layoutSettings.showSuggestedPrice && (
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm">
+                        {formatCurrency(totalSuggestedRetail)}
+                      </div>
+                      <div className="text-[9px] text-editorial-muted dark:text-stone-400 truncate">
+                        Sugerido Varejo
+                      </div>
+                    </td>
+                  )}
+
                   {/* Total Amount */}
                   <td className="py-2.5 px-3 text-right">
-                    <div className="font-mono font-bold text-brand-800 dark:text-brand-300 text-xs sm:text-sm">
+                    <div className="font-mono font-bold text-brand-800 dark:text-amber-400 text-xs sm:text-sm">
                       {canViewCosts ? formatCurrency(order.totalAmount) : 'R$ ••••••'}
                     </div>
                     <div className="text-[9px] text-editorial-muted dark:text-stone-400 truncate">
@@ -234,7 +253,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                       {canEditOrders && (
                         <button
                           onClick={() => onEditOrder(order)}
-                          className="p-1 rounded text-stone-500 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
+                          className="p-1 rounded text-stone-500 dark:text-stone-400 hover:text-brand-800 dark:hover:text-amber-300 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
                           title="Editar pedido"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -247,10 +266,10 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                           exportOrderToPdf(order, storeSettings);
                           onShowToast(`PDF ${order.orderNumber} gerado!`, 'success');
                         }}
-                        className="p-1 rounded text-stone-500 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
+                        className="p-1 rounded text-stone-500 dark:text-stone-400 hover:text-brand-800 dark:hover:text-amber-300 hover:bg-brand-50 dark:hover:bg-stone-800 transition-colors"
                         title="Baixar PDF"
                       >
-                        <FileText className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                        <FileText className="w-3.5 h-3.5 text-brand-600 dark:text-amber-400" />
                       </button>
 
                       {/* Excel */}
@@ -259,7 +278,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                           exportOrderToExcel(order);
                           onShowToast(`Excel ${order.orderNumber} exportado!`, 'success');
                         }}
-                        className="p-1 rounded text-stone-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                        className="p-1 rounded text-stone-500 dark:text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
                         title="Exportar Excel"
                       >
                         <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -268,7 +287,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                       {/* WhatsApp */}
                       <button
                         onClick={() => handleShareWhatsApp(order)}
-                        className="p-1 rounded text-stone-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                        className="p-1 rounded text-stone-500 dark:text-stone-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
                         title="Enviar por WhatsApp"
                       >
                         <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -278,7 +297,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                       {canEditOrders && (
                         <button
                           onClick={() => onDuplicateOrder(order)}
-                          className="p-1 rounded text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                          className="p-1 rounded text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                           title="Duplicar pedido"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -293,7 +312,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                               onDeleteOrder(order.id);
                             }
                           }}
-                          className="p-1 rounded text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          className="p-1 rounded text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                           title="Excluir pedido"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -305,12 +324,12 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
 
                 {/* Expanded Item Breakdown Drawer */}
                 {isExpanded && (
-                  <tr className="bg-brand-50/20 dark:bg-stone-950/40">
-                    <td colSpan={8} className="p-3 sm:p-4">
+                  <tr className="bg-brand-50/20 dark:bg-stone-950/60">
+                    <td colSpan={layoutSettings.showSuggestedPrice ? 9 : 8} className="p-3 sm:p-4">
                       <div className="bg-white dark:bg-stone-900 rounded-lg border border-brand-200 dark:border-stone-800 shadow-xs p-3 space-y-2.5">
                         <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-1.5">
-                          <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-800 dark:text-brand-300 flex items-center">
-                            <Sparkles className="w-3 h-3 mr-1 text-brand-600 dark:text-brand-400" />
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-800 dark:text-amber-400 flex items-center">
+                            <Sparkles className="w-3 h-3 mr-1 text-brand-600 dark:text-amber-400" />
                             Grade do Pedido ({order.items.length} itens)
                           </span>
                           <span className="text-[10px] text-editorial-muted dark:text-stone-400">
@@ -328,14 +347,17 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                                 <th className="py-1 px-2">Tamanho</th>
                                 <th className="py-1 px-2">Cor</th>
                                 <th className="py-1 px-2 text-right">Qtd</th>
+                                {layoutSettings.showSuggestedPrice && (
+                                  <th className="py-1 px-2 text-right">Varejo Sug.</th>
+                                )}
                                 <th className="py-1 px-2 text-right">Custo</th>
                                 <th className="py-1 px-2 text-right">Subtotal</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                               {order.items.map((item, idx) => (
-                                <tr key={idx} className="hover:bg-stone-50 dark:hover:bg-stone-800/30">
-                                  <td className="py-1.5 px-2 font-mono font-bold text-brand-900 dark:text-brand-300">{item.sku}</td>
+                                <tr key={idx} className="hover:bg-stone-50 dark:hover:bg-stone-800/40">
+                                  <td className="py-1.5 px-2 font-mono font-bold text-brand-900 dark:text-amber-400">{item.sku}</td>
                                   <td className="py-1.5 px-2 font-medium text-editorial-text dark:text-stone-200">{item.description}</td>
                                   <td className="py-1.5 px-2 text-stone-600 dark:text-stone-400">{item.category}</td>
                                   <td className="py-1.5 px-2 text-stone-700 dark:text-stone-300 font-mono">{item.size}</td>
@@ -346,9 +368,14 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                                         style={{ backgroundColor: item.colorHex }}
                                       />
                                     )}
-                                    <span>{item.color}</span>
+                                    <span className="text-stone-800 dark:text-stone-200">{item.color}</span>
                                   </td>
                                   <td className="py-1.5 px-2 text-right font-mono font-bold text-stone-900 dark:text-stone-100">{item.quantity}</td>
+                                  {layoutSettings.showSuggestedPrice && (
+                                    <td className="py-1.5 px-2 text-right font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+                                      {formatCurrency(item.suggestedPrice || item.unitCost * 2.2)}
+                                    </td>
+                                  )}
                                   <td className="py-1.5 px-2 text-right font-mono text-stone-600 dark:text-stone-400">
                                     {canViewCosts ? formatCurrency(item.unitCost) : '••••'}
                                   </td>
@@ -362,7 +389,7 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                         </div>
 
                         {order.notes && (
-                          <div className="text-[10px] text-editorial-muted dark:text-stone-400 bg-stone-50 dark:bg-stone-800/60 p-1.5 rounded border border-stone-200 dark:border-stone-700">
+                          <div className="text-[10px] text-editorial-muted dark:text-stone-300 bg-stone-50 dark:bg-stone-800/60 p-1.5 rounded border border-stone-200 dark:border-stone-700">
                             <strong>Obs:</strong> {order.notes}
                           </div>
                         )}
@@ -392,12 +419,16 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
         {Object.entries(groupedMap).map(([supplierName, supOrders]) => {
           const totalPieces = supOrders.reduce((sum, o) => sum + o.totalPieces, 0);
           const totalAmount = supOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+          const totalRetail = supOrders.reduce(
+            (sum, o) => sum + o.items.reduce((s, it) => s + ((it.suggestedPrice || it.unitCost * 2.2) * it.quantity), 0),
+            0
+          );
 
           return (
             <div key={supplierName} className="bg-white dark:bg-stone-900 rounded-xl border border-brand-200 dark:border-stone-800 shadow-soft overflow-hidden">
-              <div className="p-3.5 bg-brand-50/60 dark:bg-stone-800/80 border-b border-brand-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2">
+              <div className="p-3.5 bg-brand-50/60 dark:bg-stone-800 border-b border-brand-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center space-x-2">
-                  <Building2 className="w-4 h-4 text-brand-700 dark:text-brand-400" />
+                  <Building2 className="w-4 h-4 text-brand-700 dark:text-amber-400" />
                   <div>
                     <h3 className="font-serif font-bold text-sm text-editorial-text dark:text-stone-100">{supplierName}</h3>
                     <span className="text-[10px] text-editorial-muted dark:text-stone-400">{supOrders.length} {supOrders.length === 1 ? 'pedido' : 'pedidos'}</span>
@@ -406,12 +437,20 @@ export const OrderListView: React.FC<OrderListViewProps> = ({
                 <div className="flex items-center space-x-3 text-xs font-medium">
                   <div>
                     <span className="text-editorial-muted dark:text-stone-400">Peças: </span>
-                    <strong className="font-mono text-editorial-text dark:text-stone-200">{totalPieces} un</strong>
+                    <strong className="font-mono text-editorial-text dark:text-stone-100">{totalPieces} un</strong>
                   </div>
+                  {layoutSettings.showSuggestedPrice && (
+                    <div>
+                      <span className="text-editorial-muted dark:text-stone-400">Varejo: </span>
+                      <strong className="font-mono text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm">
+                        {formatCurrency(totalRetail)}
+                      </strong>
+                    </div>
+                  )}
                   <div>
                     <span className="text-editorial-muted dark:text-stone-400">Total: </span>
-                    <strong className="font-mono text-brand-800 dark:text-brand-300 text-xs sm:text-sm">
-                      {canViewCosts ? formatCurrency(totalAmount) : 'R$ •••••'}
+                    <strong className="font-mono text-brand-800 dark:text-amber-400 text-xs sm:text-sm">
+                      {canViewCosts ? formatCurrency(totalAmount) : 'R$ ••••••'}
                     </strong>
                   </div>
                 </div>

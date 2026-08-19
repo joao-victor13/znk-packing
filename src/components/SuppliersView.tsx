@@ -33,8 +33,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
   onNewOrderForSupplier,
 }) => {
   const [search, setSearch] = useState('');
-  const { hasPermission } = useCustomization();
+  const { hasPermission, layoutSettings } = useCustomization();
   const canManageSuppliers = hasPermission('suppliers_manage');
+  const canViewCosts = hasPermission('orders_view_costs') && !layoutSettings.hideFinancialValues;
 
   const filteredSuppliers = suppliers.filter(
     s =>
@@ -50,7 +51,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
       <div className="bg-white dark:bg-stone-900 rounded-xl p-4 sm:p-5 border border-brand-200 dark:border-stone-800 shadow-soft flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-serif font-bold text-editorial-text dark:text-stone-100">
-            Fornecedores & Facções
+            Fornecedores
           </h1>
           <p className="text-xs text-editorial-muted dark:text-stone-400">
             Cadastro de confecções parceiras, prazos médios e contatos de compras.
@@ -114,7 +115,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
 
                 {/* Category & Lead Time Chips */}
                 <div className="flex items-center space-x-1.5 mt-2.5">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-300 border border-brand-200 dark:border-brand-800/40">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-brand-50 dark:bg-stone-800 text-brand-900 dark:text-amber-300 border border-brand-200 dark:border-stone-700">
                     {sup.category || 'Confecção'}
                   </span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 flex items-center">
@@ -152,8 +153,8 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                   <span className="text-[11px] text-editorial-muted dark:text-stone-400">
                     {supOrders.length} ped ({totalPieces} pçs)
                   </span>
-                  <span className="font-mono font-bold text-brand-800 dark:text-brand-300 text-xs">
-                    {formatCurrency(totalSpent)}
+                  <span className="font-mono font-bold text-brand-800 dark:text-amber-400 text-xs">
+                    {canViewCosts ? formatCurrency(totalSpent) : 'R$ ••••••'}
                   </span>
                 </div>
               </div>
@@ -165,7 +166,7 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
                     <>
                       <button
                         onClick={() => onEditSupplier(sup)}
-                        className="p-1 rounded text-stone-400 hover:text-brand-800 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                        className="p-1 rounded text-stone-400 hover:text-brand-800 dark:hover:text-amber-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                         title="Editar"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -187,9 +188,9 @@ export const SuppliersView: React.FC<SuppliersViewProps> = ({
 
                 <button
                   onClick={() => onNewOrderForSupplier(sup)}
-                  className="px-2.5 py-1 rounded bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 text-brand-900 dark:text-brand-300 text-[11px] font-semibold flex items-center space-x-1 border border-brand-200 dark:border-brand-800/40 transition-colors"
+                  className="px-2.5 py-1 rounded bg-brand-50 dark:bg-stone-800 hover:bg-brand-100 dark:hover:bg-stone-700 text-brand-900 dark:text-amber-300 text-[11px] font-semibold flex items-center space-x-1 border border-brand-200 dark:border-stone-700 transition-colors"
                 >
-                  <PlusCircle className="w-3 h-3 text-brand-700 dark:text-brand-400" />
+                  <PlusCircle className="w-3 h-3 text-brand-700 dark:text-amber-400" />
                   <span>Novo Pedido</span>
                 </button>
               </div>

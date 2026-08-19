@@ -3,12 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --color-primary-rgb: 176, 125, 79;
-  --color-primary-hover-rgb: 142, 95, 54;
-  --color-primary-light-rgb: 250, 246, 240;
-  --color-primary-subtle-rgb: 244, 235, 225;
-  --color-primary-border-rgb: 232, 215, 195;
-  --color-primary-text-rgb: 78, 48, 24;
+  --color-primary-50-rgb: 250 246 240;
+  --color-primary-100-rgb: 244 235 225;
+  --color-primary-200-rgb: 232 215 195;
+  --color-primary-300-rgb: 218 191 160;
+  --color-primary-400-rgb: 199 159 120;
+  --color-primary-500-rgb: 176 125 79;
+  --color-primary-600-rgb: 142 95 54;
+  --color-primary-700-rgb: 108 69 36;
+  --color-primary-800-rgb: 78 48 24;
+  --color-primary-900-rgb: 47 27 11;
+  --color-primary-950-rgb: 28 16 7;
+
+  --color-primary-rgb: 176 125 79;
+  --color-primary-hover-rgb: 142 95 54;
+  --color-primary-light-rgb: 250 246 240;
+  --color-primary-subtle-rgb: 244 235 225;
+  --color-primary-border-rgb: 232 215 195;
+  --color-primary-text-rgb: 78 48 24;
 
   --color-primary: #B07D4F;
   --color-primary-hover: #8E5F36;
@@ -25,18 +37,30 @@
 }
 
 .dark {
-  --color-primary-rgb: 217, 119, 6;
-  --color-primary-hover-rgb: 245, 158, 11;
-  --color-primary-light-rgb: 39, 39, 42;
-  --color-primary-subtle-rgb: 63, 63, 70;
-  --color-primary-border-rgb: 82, 82, 91;
-  --color-primary-text-rgb: 251, 191, 36;
+  --color-primary-50-rgb: 38 30 22;
+  --color-primary-100-rgb: 54 42 30;
+  --color-primary-200-rgb: 80 62 45;
+  --color-primary-300-rgb: 252 211 77;   /* Amber 300 - High Contrast Golden Text on Dark */
+  --color-primary-400-rgb: 251 191 36;   /* Amber 400 - High Contrast Gold Accent */
+  --color-primary-500-rgb: 245 158 11;   /* Amber 500 - Primary Brand Accent */
+  --color-primary-600-rgb: 217 119 6;    /* Amber 600 - CTA Primary Buttons */
+  --color-primary-700-rgb: 180 83 9;     /* Amber 700 - CTA Hover */
+  --color-primary-800-rgb: 253 230 138;  /* Amber 200 - Very Light Gold Text on Dark */
+  --color-primary-900-rgb: 254 243 199;  /* Amber 100 - Lightest Warm Cream on Dark */
+  --color-primary-950-rgb: 24 18 13;
+
+  --color-primary-rgb: 217 119 6;
+  --color-primary-hover-rgb: 245 158 11;
+  --color-primary-light-rgb: 38 30 22;
+  --color-primary-subtle-rgb: 54 42 30;
+  --color-primary-border-rgb: 80 62 45;
+  --color-primary-text-rgb: 251 191 36;
 
   --color-primary: #D97706;
   --color-primary-hover: #F59E0B;
-  --color-primary-light: #27272A;
-  --color-primary-subtle: #3F3F46;
-  --color-primary-border: #52525B;
+  --color-primary-light: #261E16;
+  --color-primary-subtle: #362A1E;
+  --color-primary-border: #503E2D;
   --color-primary-text: #FBBF24;
 
   --color-bg-light: #121215;
@@ -52,6 +76,43 @@
     color: var(--color-text);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  /* High-contrast text selection for Light Mode */
+  ::selection {
+    background-color: #d4a373;
+    color: #1c1917;
+  }
+
+  ::-moz-selection {
+    background-color: #d4a373;
+    color: #1c1917;
+  }
+
+  /* High-contrast text selection for Dark Mode */
+  .dark ::selection,
+  .dark *::selection {
+    background-color: #d97706;
+    color: #ffffff;
+  }
+
+  .dark ::-moz-selection,
+  .dark *::-moz-selection {
+    background-color: #d97706;
+    color: #ffffff;
+  }
+
+  /* Explicit selection contrast for Form Inputs & Textareas */
+  input::selection,
+  textarea::selection {
+    background-color: #d4a373;
+    color: #1c1917;
+  }
+
+  .dark input::selection,
+  .dark textarea::selection {
+    background-color: #f59e0b;
+    color: #000000;
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -71,11 +132,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-primary-subtle);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary-border);
+  background: rgba(150, 150, 150, 0.3);
   border-radius: 9999px;
 }
 
@@ -85,7 +146,7 @@
 
 /* Data grid inline cell transitions */
 .grid-cell-input {
-  @apply w-full bg-transparent px-2.5 py-1.5 text-sm outline-none transition-all duration-150 rounded border border-transparent hover:border-brand-200 focus:border-brand-500 focus:bg-white dark:focus:bg-stone-900 focus:ring-2 focus:ring-brand-500/20;
+  @apply w-full bg-transparent px-2.5 py-1.5 text-sm outline-none transition-all duration-150 rounded border border-transparent hover:border-brand-200 dark:hover:border-stone-700 focus:border-brand-500 dark:focus:border-brand-400 focus:bg-white dark:focus:bg-stone-900 focus:ring-2 focus:ring-brand-500/20 dark:text-stone-100;
 }
 
 .grid-cell-number {

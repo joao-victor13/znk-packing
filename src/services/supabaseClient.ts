@@ -410,21 +410,34 @@ export async function fetchOrdersFromSupabase(): Promise<PurchaseOrder[] | null>
 
     return orderRows.map((row: any) => {
       const sup = row.suppliers || {};
-      const itemsList: OrderItem[] = (row.items || []).map((item: any) => ({
-        id: item.id,
-        sku: item.sku,
-        description: item.description,
-        category: 'Vestidos', // Standard fallback category
-        sizeGridType: item.size_grid_type || 'letter',
-        size: item.size,
-        color: item.color,
-        colorHex: item.color_hex || undefined,
-        quantity: item.quantity,
-        unitCost: Number(item.unit_cost) || 0,
-        suggestedPrice: item.suggested_price ? Number(item.suggested_price) : undefined,
-        subtotal: Number(item.subtotal) || 0,
-        notes: item.notes || undefined,
-      }));
+      const itemsList: OrderItem[] = (row.items || []).map((item: any) => {
+        const uCost = Number(item.unit_cost) || 0;
+        const sPrice = item.suggested_price ? Number(item.suggested_price) : undefined;
+        const dPercent = item.discount_percent !== undefined && item.discount_percent !== null 
+          ? Number(item.discount_percent) 
+          : (item.discountPercent ? Number(item.discountPercent) : 0);
+        const mk = item.markup !== undefined && item.markup !== null
+          ? Number(item.markup)
+          : (uCost > 0 && sPrice ? Math.round((sPrice / uCost) * 100) / 100 : 2.2);
+
+        return {
+          id: item.id,
+          sku: item.sku,
+          description: item.description,
+          category: 'Vestidos', // Standard fallback category
+          sizeGridType: item.size_grid_type || 'letter',
+          size: item.size,
+          color: item.color,
+          colorHex: item.color_hex || undefined,
+          quantity: item.quantity,
+          unitCost: uCost,
+          discountPercent: dPercent,
+          markup: mk,
+          suggestedPrice: sPrice,
+          subtotal: Number(item.subtotal) || 0,
+          notes: item.notes || undefined,
+        };
+      });
 
       return {
         id: row.id,
@@ -445,6 +458,8 @@ export async function fetchOrdersFromSupabase(): Promise<PurchaseOrder[] | null>
         shippingCarrier: row.shipping_carrier || undefined,
         shippingCost: Number(row.shipping_cost) || 0,
         discount: Number(row.discount) || 0,
+        discountPercentage: Number(row.discount_percentage) || 0,
+        defaultMarkup: Number(row.default_markup) || 2.2,
         totalPieces: row.total_pieces,
         totalAmount: Number(row.total_amount) || 0,
         notes: row.notes || undefined,
@@ -521,6 +536,8 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
       shipping_carrier: order.shippingCarrier || null,
       shipping_cost: Number(order.shippingCost) || 0,
       discount: Number(order.discount) || 0,
+      discount_percentage: Number(order.discountPercentage) || 0,
+      default_markup: Number(order.defaultMarkup) || 2.2,
       total_pieces: Number(order.totalPieces) || 0,
       total_amount: Number(order.totalAmount) || 0,
       notes: order.notes || null,
@@ -531,7 +548,8 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
       orderPayload.id = orderDbId;
     }
 
-    const { data: savedOrder, error: orderError } = await supabase
+    let savedOrder: any = null;
+    const { data: upsertData, error: orderError } = await supabase
       .from('purchase_orders')
       .upsert(orderPayload, { onConflict: 'order_number' })
       .select(`
@@ -549,8 +567,35 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
       .single();
 
     if (orderError) {
-      console.error('[Supabase] Error saving order header:', orderError.message);
-      return null;
+      // Fallback in case columns do not exist in DB yet
+      console.warn('[Supabase] Retrying order header save without optional columns:', orderError.message);
+      delete orderPayload.discount_percentage;
+      delete orderPayload.default_markup;
+
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('purchase_orders')
+        .upsert(orderPayload, { onConflict: 'order_number' })
+        .select(`
+          *,
+          suppliers:supplier_id (
+            id,
+            trade_name,
+            corporate_name,
+            cnpj_cpf,
+            contact_name,
+            phone,
+            email
+          )
+        `)
+        .single();
+
+      if (fallbackError) {
+        console.error('[Supabase] Error saving order header:', fallbackError.message);
+        return null;
+      }
+      savedOrder = fallbackData;
+    } else {
+      savedOrder = upsertData;
     }
 
     const finalOrderId = savedOrder.id;
@@ -573,6 +618,8 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
         color_hex: item.colorHex || null,
         quantity: Number(item.quantity) || 1,
         unit_cost: Number(item.unitCost) || 0,
+        discount_percent: Number(item.discountPercent) || 0,
+        markup: Number(item.markup) || 2.2,
         suggested_price: item.suggestedPrice ? Number(item.suggestedPrice) : null,
         subtotal: Number(item.subtotal) || 0,
         notes: item.notes || null,
@@ -584,9 +631,36 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
         .select('*');
 
       if (itemsError) {
-        console.error('[Supabase] Error saving order items:', itemsError.message);
+        console.warn('[Supabase] Retrying items save with standard columns:', itemsError.message);
+        const fallbackItemsPayload = itemsPayload.map(({ discount_percent, markup, ...rest }: any) => rest);
+        const { data: fallbackInserted, error: fallbackItemsErr } = await supabase
+          .from('purchase_order_items')
+          .insert(fallbackItemsPayload)
+          .select('*');
+
+        if (fallbackItemsErr) {
+          console.error('[Supabase] Error saving order items fallback:', fallbackItemsErr.message);
+        } else if (fallbackInserted) {
+          savedItems = fallbackInserted.map((item: any, idx: number) => ({
+            id: item.id,
+            sku: item.sku,
+            description: item.description,
+            category: item.description || 'Vestidos',
+            sizeGridType: item.size_grid_type || 'letter',
+            size: item.size,
+            color: item.color,
+            colorHex: item.color_hex || undefined,
+            quantity: item.quantity,
+            unitCost: Number(item.unit_cost) || 0,
+            discountPercent: order.items[idx]?.discountPercent || 0,
+            markup: order.items[idx]?.markup || 2.2,
+            suggestedPrice: item.suggested_price ? Number(item.suggested_price) : undefined,
+            subtotal: Number(item.subtotal) || 0,
+            notes: item.notes || undefined,
+          }));
+        }
       } else if (insertedItems) {
-        savedItems = insertedItems.map((item: any) => ({
+        savedItems = insertedItems.map((item: any, idx: number) => ({
           id: item.id,
           sku: item.sku,
           description: item.description,
@@ -597,6 +671,8 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
           colorHex: item.color_hex || undefined,
           quantity: item.quantity,
           unitCost: Number(item.unit_cost) || 0,
+          discountPercent: item.discount_percent !== undefined ? Number(item.discount_percent) : (order.items[idx]?.discountPercent || 0),
+          markup: item.markup !== undefined ? Number(item.markup) : (order.items[idx]?.markup || 2.2),
           suggestedPrice: item.suggested_price ? Number(item.suggested_price) : undefined,
           subtotal: Number(item.subtotal) || 0,
           notes: item.notes || undefined,
@@ -624,7 +700,9 @@ export async function saveOrderToSupabase(order: PurchaseOrder, userId?: string)
       shippingCarrier: savedOrder.shipping_carrier || undefined,
       shippingCost: Number(savedOrder.shipping_cost) || 0,
       discount: Number(savedOrder.discount) || 0,
-      totalPieces: savedOrder.total_pieces,
+      discountPercentage: Number(savedOrder.discount_percentage) || order.discountPercentage || 0,
+      defaultMarkup: Number(savedOrder.default_markup) || order.defaultMarkup || 2.2,
+      totalPieces: Number(savedOrder.total_pieces) || 0,
       totalAmount: Number(savedOrder.total_amount) || 0,
       notes: savedOrder.notes || undefined,
       items: savedItems.length > 0 ? savedItems : order.items,

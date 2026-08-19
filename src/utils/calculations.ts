@@ -1,18 +1,57 @@
 import { OrderItem, PurchaseOrder, DeadlineStatus, FinancialSummary } from '../types';
 
-export function calculateItemSubtotal(quantity: number, unitCost: number): number {
+export function calculateItemSubtotal(
+  quantity: number, 
+  unitCost: number, 
+  discountPercent = 0
+): number {
   const qty = isNaN(quantity) || quantity < 0 ? 0 : quantity;
   const cost = isNaN(unitCost) || unitCost < 0 ? 0 : unitCost;
-  return Math.round(qty * cost * 100) / 100;
+  const disc = isNaN(discountPercent) || discountPercent < 0 ? 0 : Math.min(100, discountPercent);
+  const netUnitCost = disc > 0 ? cost * (1 - disc / 100) : cost;
+  return Math.round(qty * netUnitCost * 100) / 100;
+}
+
+export function calculateSuggestedPrice(
+  unitCost: number,
+  markup = 2.2,
+  discountPercent = 0
+): number {
+  const cost = isNaN(unitCost) || unitCost < 0 ? 0 : unitCost;
+  const mk = isNaN(markup) || markup <= 0 ? 2.2 : markup;
+  const disc = isNaN(discountPercent) || discountPercent < 0 ? 0 : Math.min(100, discountPercent);
+  const effectiveCost = disc > 0 ? cost * (1 - disc / 100) : cost;
+  return Math.round(effectiveCost * mk * 100) / 100;
 }
 
 export function calculateOrderTotals(
   items: OrderItem[],
   shippingCost = 0,
   discount = 0
-): { totalPieces: number; itemsSubtotal: number; totalAmount: number } {
+): { 
+  totalPieces: number; 
+  itemsSubtotal: number; 
+  grossItemsSubtotal: number;
+  itemsDiscountTotal: number;
+  totalAmount: number;
+  totalSuggestedRetail: number;
+} {
   const totalPieces = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  
+  const grossItemsSubtotal = items.reduce((sum, item) => {
+    const q = Number(item.quantity) || 0;
+    const c = Number(item.unitCost) || 0;
+    return sum + (q * c);
+  }, 0);
+
   const itemsSubtotal = items.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0);
+  const itemsDiscountTotal = Math.max(0, grossItemsSubtotal - itemsSubtotal);
+
+  const totalSuggestedRetail = items.reduce((sum, item) => {
+    const q = Number(item.quantity) || 0;
+    const suggested = item.suggestedPrice || calculateSuggestedPrice(item.unitCost, item.markup || 2.2, item.discountPercent || 0);
+    return sum + (q * suggested);
+  }, 0);
   
   const ship = Number(shippingCost) || 0;
   const disc = Number(discount) || 0;
@@ -21,7 +60,10 @@ export function calculateOrderTotals(
   return {
     totalPieces,
     itemsSubtotal: Math.round(itemsSubtotal * 100) / 100,
+    grossItemsSubtotal: Math.round(grossItemsSubtotal * 100) / 100,
+    itemsDiscountTotal: Math.round(itemsDiscountTotal * 100) / 100,
     totalAmount: Math.round(totalAmount * 100) / 100,
+    totalSuggestedRetail: Math.round(totalSuggestedRetail * 100) / 100,
   };
 }
 
@@ -44,7 +86,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: 0,
       label: 'Entregue / Faturado',
       shortLabel: 'Entregue',
-      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      badgeClass: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60',
       dotClass: 'bg-emerald-500',
     };
   }
@@ -55,7 +97,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: 0,
       label: 'Cancelado',
       shortLabel: 'Cancelado',
-      badgeClass: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+      badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700',
       dotClass: 'bg-zinc-400',
     };
   }
@@ -66,7 +108,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: 999,
       label: 'Sem data definida',
       shortLabel: 'S/ Data',
-      badgeClass: 'bg-stone-100 text-stone-600 border-stone-200',
+      badgeClass: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700',
       dotClass: 'bg-stone-400',
     };
   }
@@ -87,7 +129,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: diffDays,
       label: `Atrasado (${daysLate} ${daysLate === 1 ? 'dia' : 'dias'})`,
       shortLabel: `${daysLate}d atrasado`,
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse',
+      badgeClass: 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800/60 animate-pulse',
       dotClass: 'bg-rose-500',
     };
   } else if (diffDays <= 4) {
@@ -96,7 +138,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: diffDays,
       label: diffDays === 0 ? 'Entrega Hoje!' : `Entrega em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`,
       shortLabel: diffDays === 0 ? 'Hoje' : `${diffDays}d restantes`,
-      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      badgeClass: 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60',
       dotClass: 'bg-amber-500',
     };
   } else {
@@ -105,7 +147,7 @@ export function getDeliveryDeadlineStatus(
       daysRemaining: diffDays,
       label: `No prazo (${diffDays} dias)`,
       shortLabel: `${diffDays}d`,
-      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      badgeClass: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60',
       dotClass: 'bg-emerald-500',
     };
   }

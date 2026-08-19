@@ -10,7 +10,10 @@ import { SupplierModal } from './components/SupplierModal';
 import { OrderPreviewModal } from './components/OrderPreviewModal';
 import { SettingsView } from './components/SettingsView';
 import { LoginView } from './components/LoginView';
-import { ToastContainer, ToastData } from './components/Toast';
+import { ToastContainer, ToastData, ToastAction } from './components/Toast';
+import { CommandPalette } from './components/CommandPalette';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { exportOrdersListToExcel } from './utils/exportExcel';
 import { 
   PurchaseOrder, 
   Supplier, 
@@ -158,24 +161,55 @@ function AppContent() {
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [supplierToEdit, setSupplierToEdit] = useState<Supplier | null>(null);
 
+  // Command Palette State
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
   // Preview Document Modal
   const [previewOrder, setPreviewOrder] = useState<PurchaseOrder | null>(null);
 
-  // Toast Notifications
+  // Toast Notifications with Action / Undo support
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info', action?: ToastAction) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type, action }]);
 
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    }, action ? 7000 : 4000);
   };
 
   const dismissToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
+
+  // Global Keyboard Shortcuts (Ctrl+K for Command Palette, Ctrl+N for New Order)
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      ctrlOrCmd: true,
+      description: 'Abrir Command Palette Global',
+      handler: () => setIsCommandPaletteOpen(prev => !prev),
+    },
+    {
+      key: 'n',
+      ctrlOrCmd: true,
+      description: 'Criar Novo Pedido',
+      handler: () => {
+        setOrderToEdit(null);
+        setActiveView('editor');
+      },
+    },
+    {
+      key: 'Escape',
+      description: 'Fechar Janelas e Modais',
+      handler: () => {
+        if (isCommandPaletteOpen) setIsCommandPaletteOpen(false);
+        if (isSupplierModalOpen) setIsSupplierModalOpen(false);
+        if (previewOrder) setPreviewOrder(null);
+      },
+    },
+  ], isAuthenticated);
 
   // Filter State
   const [filters, setFilters] = useState<OrderFilterState>({
@@ -375,6 +409,7 @@ function AppContent() {
         onNewOrder={handleNewOrder}
         orders={orders}
         onResetToDemo={handleResetToDemo}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -467,6 +502,22 @@ function AppContent() {
           </>
         )}
       </main>
+
+      {/* Global Command Palette Modal (Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        orders={orders}
+        suppliers={suppliers}
+        onNavigate={view => {
+          setActiveView(view);
+          if (view === 'list') setOrderToEdit(null);
+        }}
+        onNewOrder={handleNewOrder}
+        onEditOrder={handleEditOrder}
+        onExportExcel={() => exportOrdersListToExcel(orders)}
+        onShowToast={showToast}
+      />
 
       {/* Supplier Create/Edit Modal */}
       <SupplierModal

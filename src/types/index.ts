@@ -28,8 +28,10 @@ export interface OrderItem {
   colorHex?: string; // Ex: "#FAF8F5", "#B07D4F"
   quantity: number;
   unitCost: number; // In BRL (R$)
-  suggestedPrice?: number; // Retail price (Margem/Markup)
-  subtotal: number; // quantity * unitCost
+  discountPercent?: number; // Ex: 10 para 10% de desconto recebido no produto
+  markup?: number; // Ex: 2.20 para multiplicador de markup sobre o custo
+  suggestedPrice?: number; // Retail price (unitCost * markup ou líquido * markup)
+  subtotal: number; // quantity * (unitCost * (1 - (discountPercent || 0) / 100))
   notes?: string;
 }
 
@@ -73,7 +75,9 @@ export interface PurchaseOrder {
   paymentTerms: string;
   shippingCarrier?: string;
   shippingCost?: number;
-  discount?: number;
+  discount?: number; // Desconto financeiro fixo (R$)
+  discountPercentage?: number; // Desconto percentual global (%)
+  defaultMarkup?: number; // Markup padrão de venda sugerido (ex: 2.2)
 
   items: OrderItem[];
   
